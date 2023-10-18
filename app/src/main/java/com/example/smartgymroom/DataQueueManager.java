@@ -66,10 +66,8 @@ public class DataQueueManager {
 
     public double[] getAverages() {
         double[] averages = new double[QUEUE_COUNT];
-        int i = 0;
-        for (DataQueue queue : dataQueues) {
-            averages[i] = queue.currentAverage;
-            i++;
+        for (int i = 0; i < dataQueues.length; i++) {
+            averages[i] = dataQueues[i].currentAverage;
         }
         return averages;
     }
