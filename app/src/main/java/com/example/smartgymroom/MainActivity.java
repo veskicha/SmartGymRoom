@@ -1,6 +1,9 @@
 package com.example.smartgymroom;
 
 import android.Manifest;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.animation.PropertyValuesHolder;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -15,15 +18,33 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+
+import kotlinx.coroutines.CoroutineScope;
+import weka.classifiers.Classifier;
+import weka.core.Attribute;
+import weka.core.DenseInstance;
+import weka.core.Instance;
+import weka.core.Instances;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -35,12 +56,47 @@ public class MainActivity extends AppCompatActivity {
     private final ScanSettings scanSettings = new ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
             .build();
+    private ArrayList<String> activityLabels = new ArrayList<>(Arrays.asList("strength", "cardio", "stretching"));
+    private Classifier wekaModel;
+    private SensorReading sensors;
+    DataQueueManager manager = new DataQueueManager();
 
+    private Handler handler = new Handler();
+    private Runnable runnableCode = new Runnable() {
+        @Override
+        public void run() {
+            double[] averages = manager.getAverages();
+            try {
+                String prediction = classifyInstance(averages);
+                Log.d("recognition", prediction);
+
+                // Here you can update the UI elements if needed
+
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            handler.postDelayed(this, 1000);
+        }
+    };
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        handler.removeCallbacks(runnableCode); // Stop the loop when the activity is destroyed
+    }
     @SuppressLint("MissingPermission")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        wekaModel = initializeWeka();
+        sensors = new SensorReading(manager);
+        SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        sensors.initSensors(sensorManager);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        handler.post(runnableCode);
+
 
         mediaManager = new MediaManager(this);
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
@@ -58,8 +114,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-
-
     private final ScanCallback scanCallback = new ScanCallback() {
         @SuppressLint("MissingPermission")
         @Override
@@ -139,5 +193,48 @@ public class MainActivity extends AppCompatActivity {
         }
 
     };
+
+    private Classifier initializeWeka() {
+        Classifier classifier = null;
+        try {
+            ObjectInputStream objectInputStream = new ObjectInputStream(getAssets().open("tests/simple_test.model"));
+            classifier = (Classifier) objectInputStream.readObject();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return classifier;
+    }
+
+    private String classifyInstance(double[] input) throws IOException {
+        try {
+            double result = wekaModel.classifyInstance(createInstance(input));
+            return activityLabels.get((int) result);
+        } catch (Exception e) {
+            Log.d("WekaErrorE", e.getMessage());
+            return "Error";
+        }
+    }
+
+    private Instance createInstance(double[] inputData) {
+        List<Attribute> attributes = new ArrayList<>();
+        attributes.add(new Attribute("aX"));
+        attributes.add(new Attribute("aY"));
+        attributes.add(new Attribute("aZ"));
+        attributes.add(new Attribute("mX"));
+        attributes.add(new Attribute("mY"));
+        attributes.add(new Attribute("mZ"));
+        attributes.add(new Attribute("gX"));
+        attributes.add(new Attribute("gY"));
+        attributes.add(new Attribute("gZ"));
+        Attribute activity = new Attribute("Activity", activityLabels);
+        attributes.add(activity);
+
+        Instances dataset = new Instances("TestInstances", new ArrayList<>(attributes), 0);
+        dataset.setClassIndex(dataset.numAttributes() - 1);
+        Instance inst = new DenseInstance(1.0, inputData);
+        dataset.add(inst);
+        inst.setDataset(dataset);
+        return inst;
+    }
 
 }
