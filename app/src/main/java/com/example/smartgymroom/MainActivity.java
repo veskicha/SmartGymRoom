@@ -51,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
     private Classifier wekaModel;
     private SensorReading sensors;
     DataQueueManager manager = new DataQueueManager();
+    TextView predictionTextView;
 
     private Handler handler = new Handler();
     private Runnable runnableCode = new Runnable() {
@@ -60,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 String prediction = classifyInstance(averages);
                 Log.d("recognition", prediction);
+                predictionTextView.setText(prediction);
 
                 // Here you can update the UI elements if needed
 
@@ -85,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
         sensors.initSensors(sensorManager);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        predictionTextView = findViewById(R.id.prediction_text_view);
 
         handler.post(runnableCode);
 
