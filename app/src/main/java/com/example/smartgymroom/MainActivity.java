@@ -18,13 +18,14 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
-import android.view.animation.ScaleAnimation;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -51,32 +52,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ImageView imageViewlogo = findViewById(R.id.logoImageView);
-        TextView textViewSmart = findViewById(R.id.textViewSmart);
-        TextView textViewGym = findViewById(R.id.textViewGym);
-        TextView textViewRoom = findViewById(R.id.textViewRoom);
-
-        new Handler().postDelayed(() -> logoAnimation(imageViewlogo), 250);
-
-        ObjectAnimator scaleXAnimator = ObjectAnimator.ofFloat(imageViewlogo, "scaleX", 1.0f, 0.25f);
-        ObjectAnimator scaleYAnimator = ObjectAnimator.ofFloat(imageViewlogo, "scaleY", 1.0f, 0.25f);
-
-        AnimatorSet animatorSet = new AnimatorSet();
-        animatorSet.setDuration(1000);
-        animatorSet.setStartDelay(2000);// Duration in milliseconds
-        animatorSet.playTogether(scaleXAnimator, scaleYAnimator);  // Play both animations at the same time
-        animatorSet.start();
-
-        PropertyValuesHolder pvhX = PropertyValuesHolder.ofFloat("translationX", 0, -430);
-        PropertyValuesHolder pvhY = PropertyValuesHolder.ofFloat("translationY", 0, -800);
-        ObjectAnimator animator = ObjectAnimator.ofPropertyValuesHolder(imageViewlogo, pvhX, pvhY);
-        animator.setDuration(500);
-        animator.setStartDelay(2500);// Duration in milliseconds
-
-        animator.start();
-        new Handler().postDelayed(() -> startFadeInAnimation(textViewSmart), 2750);  // Delay 1 second
-        new Handler().postDelayed(() -> startFadeInAnimation(textViewGym), 3000);   // Delay 3 seconds
-        new Handler().postDelayed(() -> startFadeInAnimation(textViewRoom), 3250);  // Delay 5 seconds
 
         mediaManager = new MediaManager(this);
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
@@ -94,49 +69,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-    private void logoAnimation(final ImageView imageView) {
-        AlphaAnimation fadeIn = new AlphaAnimation(0.0f, 1.0f);
-        fadeIn.setDuration(1000);
-        fadeIn.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-                imageView.setAlpha(1.0f);
-            }@Override
-            public void onAnimationEnd(Animation animation) {
-                // Ensure the view remains visible after the animation
-            }
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-
-            }
-        });
-
-        imageView.startAnimation(fadeIn);
-    }
-    private void startFadeInAnimation(final TextView textView) {
-        AlphaAnimation fadeIn = new AlphaAnimation(0.0f, 1.0f);
-        fadeIn.setDuration(1000);
-
-        fadeIn.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-                textView.setAlpha(1.0f);
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                // Ensure the view remains visible after the animation
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-                // Nothing needed here
-            }
-        });
-
-        textView.startAnimation(fadeIn);
-    }
-
     private final ScanCallback scanCallback = new ScanCallback() {
         @SuppressLint("MissingPermission")
         @Override

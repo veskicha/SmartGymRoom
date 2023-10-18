@@ -9,73 +9,12 @@
     tools:context=".MainActivity"
     tools:ignore="ExtraText">
 
-    <TextView
-        android:id="@+id/textViewSmart"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="140dp"
-        android:alpha="0"
-        android:text="Smart"
-        android:textSize="120sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.502"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/textViewGym"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:alpha="0"
-        android:text="Gym"
-        android:textSize="120sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@+id/logoImageView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.501"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.467" />
-
-    <TextView
-        android:id="@+id/textViewRoom"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:alpha="0"
-        android:text="Room"
-        android:textSize="120sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.502"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/logoImageView"
-        app:layout_constraintVertical_bias="0.666" />
-
     <ImageView
         android:id="@+id/logoImageView"
-        android:layout_width="404dp"
-        android:layout_height="718dp"
-        android:layout_marginTop="4dp"
+        android:layout_width="124dp"
+        android:layout_height="100dp"
         android:src="@drawable/logo"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:alpha="1"
-        android:text="Active Sync"
-        android:textSize="45sp"
-        android:textStyle="italic"
-        android:textColor="#2fff65"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.541"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/logoImageView"
-        app:layout_constraintVertical_bias="0.816" />
+        tools:layout_editor_absoluteX="-19dp"
+        tools:layout_editor_absoluteY="-17dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-

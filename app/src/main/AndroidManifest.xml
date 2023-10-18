@@ -23,7 +23,7 @@
         android:theme="@style/Theme.ArduinoBTExamplev3"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity"
+            android:name=".LoadingPage"
             android:exported="true"
             tools:ignore="MissingClass">
             <intent-filter>
@@ -32,6 +32,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            tools:ignore="MissingClass" />
     </application>
 
 </manifest>
