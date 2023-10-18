@@ -5,7 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000000"
-    android:padding="16dp"
     tools:context=".MainActivity"
     tools:ignore="ExtraText">
 
@@ -14,7 +13,35 @@
         android:layout_width="124dp"
         android:layout_height="100dp"
         android:src="@drawable/logo"
-        tools:layout_editor_absoluteX="-19dp"
-        tools:layout_editor_absoluteY="-17dp" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0"
+        tools:ignore="MissingConstraints" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="176dp"
+        android:layout_height="31dp"
+        android:text="Current activity: "
+        android:textSize="30dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.131"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:ignore="MissingConstraints"
+        tools:layout_editor_absoluteY="350dp" />
+
+    <TextView
+        android:id="@+id/prediction_text_view"
+        android:layout_width="179dp"
+        android:layout_height="30dp"
+        android:layout_marginEnd="16dp"
+        android:textSize="30dp"
+        android:text=""
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:layout_editor_absoluteY="350dp"
+        tools:ignore="MissingConstraints" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

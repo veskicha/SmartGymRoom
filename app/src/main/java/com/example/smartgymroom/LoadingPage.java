@@ -11,6 +11,7 @@ import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toolbar;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -19,6 +20,7 @@ public class LoadingPage extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.loading_page);
+
 
         //Animations start for app
         ImageView imageViewlogo = findViewById(R.id.logoImageView);
@@ -64,9 +66,12 @@ public class LoadingPage extends AppCompatActivity {
                 if(x1 < x2){
                 Intent i = new Intent(LoadingPage.this, MainActivity.class);
                 startActivity(i);
+                overridePendingTransition(R.anim.slide_in_left,R.anim.slide_out_right);
             }else if(x1 > x2){
                 Intent i = new Intent(LoadingPage.this, MainActivity.class);
                 startActivity(i);
+                overridePendingTransition(R.anim.slide_in_right,R.anim.slide_out_left);
+
             }
             break;
         }
@@ -115,5 +120,5 @@ public class LoadingPage extends AppCompatActivity {
 
         textView.startAnimation(fadeIn);
     }
-
+    
 }
