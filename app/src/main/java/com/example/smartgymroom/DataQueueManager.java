@@ -76,8 +76,8 @@ public class DataQueueManager {
     public void addSensorData(float[] sensorData, int queueIndex) {
         int j = 0;
         for (int i = queueIndex - 3; i < queueIndex; i++) {
-            j++;
             dataQueues[i].addData(sensorData[j]);
+            j++;
         }
     }
 
