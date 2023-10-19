@@ -1,17 +1,27 @@
 package com.example.smartgymroom;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Queue;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class DataQueueManager {
 
     private static final int QUEUE_SIZE = 50;
     private static final int QUEUE_COUNT = 9;
     private static final int AVERAGE_INTERVAL = 10;
+
+    public String getMostFrequentString(ArrayList<String> queue) {
+        return queue.stream()
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+                .entrySet()
+                .stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(null);
+    }
 
     private DataQueue[] dataQueues;
 
