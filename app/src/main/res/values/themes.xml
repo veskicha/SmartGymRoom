@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
-    <style name="Theme.ArduinoBTExamplev3" parent="Theme.AppCompat.DayNight.DarkActionBar">
+    <style name="Theme.ArduinoBTExamplev3" parent="Theme.AppCompat.DayNight.NoActionBar">
         <!-- Set the background color -->
         <item name="android:windowBackground">#000000</item>
         <!-- Set the text color -->

@@ -22,6 +22,21 @@
         tools:ignore="MissingConstraints" />
 
     <TextView
+        android:id="@+id/activesync"
+        android:layout_width="116dp"
+        android:layout_height="31dp"
+        android:text="Active Sync"
+        android:textColor="#2fff65"
+        android:textSize="27sp"
+        android:textStyle="italic"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.908"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.05" />
+
+    <TextView
         android:id="@+id/textView"
         android:layout_width="176dp"
         android:layout_height="31dp"
