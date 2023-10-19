@@ -30,6 +30,7 @@ import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Queue;
 import java.util.UUID;
 
 import weka.classifiers.Classifier;
@@ -43,13 +44,13 @@ public class MainActivity extends AppCompatActivity {
     private boolean init = false;
     private MediaManager mediaManager;
     private static final String TAG = "DebugLogs";
+    private Weka wekaManager;
+    private static final String modelName = "tests/test_model_with_high_sliding_window_size.model";
     private BluetoothLeScanner scanner;
     private final List<ScanFilter> filters = new ArrayList<>();
     private final ScanSettings scanSettings = new ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
             .build();
-    private ArrayList<String> activityLabels = new ArrayList<>(Arrays.asList("strength", "cardio", "stretching"));
-    private Classifier wekaModel;
     private SensorReading sensors;
     DataQueueManager manager = new DataQueueManager();
     TextView predictionTextView;
@@ -58,18 +59,8 @@ public class MainActivity extends AppCompatActivity {
     private Runnable runnableCode = new Runnable() {
         @Override
         public void run() {
-            double[] averages = manager.getAverages();
-            try {
-                String prediction = classifyInstance(averages);
-                Log.d("recognition", prediction);
-                predictionTextView.setText(prediction);
-
-                // Here you can update the UI elements if needed
-
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-            handler.postDelayed(this, 1000);
+            predictionTextView.setText(wekaManager.getActivity());
+            handler.postDelayed(this, 3000);
         }
     };
 
@@ -81,9 +72,8 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("MissingPermission")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
-        wekaModel = initializeWeka();
         sensors = new SensorReading(manager);
+        wekaManager = new Weka(this, manager);
         SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         sensors.initSensors(sensorManager);
         super.onCreate(savedInstanceState);
@@ -192,44 +182,12 @@ public class MainActivity extends AppCompatActivity {
     private Classifier initializeWeka() {
         Classifier classifier = null;
         try {
-            ObjectInputStream objectInputStream = new ObjectInputStream(getAssets().open("tests/simple_test.model"));
+            ObjectInputStream objectInputStream = new ObjectInputStream(getAssets().open(modelName));
             classifier = (Classifier) objectInputStream.readObject();
         } catch (Exception e) {
             e.printStackTrace();
         }
         return classifier;
-    }
-
-    private String classifyInstance(double[] input) throws IOException {
-        try {
-            double result = wekaModel.classifyInstance(createInstance(input));
-            return activityLabels.get((int) result);
-        } catch (Exception e) {
-            Log.d("WekaErrorE", e.getMessage());
-            return "Error";
-        }
-    }
-
-    private Instance createInstance(double[] inputData) {
-        List<Attribute> attributes = new ArrayList<>();
-        attributes.add(new Attribute("aX"));
-        attributes.add(new Attribute("aY"));
-        attributes.add(new Attribute("aZ"));
-        attributes.add(new Attribute("mX"));
-        attributes.add(new Attribute("mY"));
-        attributes.add(new Attribute("mZ"));
-        attributes.add(new Attribute("gX"));
-        attributes.add(new Attribute("gY"));
-        attributes.add(new Attribute("gZ"));
-        Attribute activity = new Attribute("Activity", activityLabels);
-        attributes.add(activity);
-
-        Instances dataset = new Instances("TestInstances", new ArrayList<>(attributes), 0);
-        dataset.setClassIndex(dataset.numAttributes() - 1);
-        Instance inst = new DenseInstance(1.0, inputData);
-        dataset.add(inst);
-        inst.setDataset(dataset);
-        return inst;
     }
 
 }
