@@ -15,12 +15,25 @@ public class MediaManager {
     private MediaPlayer mediaPlayer;
 
 
-    public void startSong() {
+    public void startSong(int activity) {
+        if (activity == 1){
+            mediaPlayer = MediaPlayer.create(context, R.raw.cardio) ;
+        }else if(activity == 2){
+            mediaPlayer = MediaPlayer.create(context, R.raw.strength) ;
+        }else if (activity == 3 ){
+            mediaPlayer = MediaPlayer.create(context, R.raw.stretching) ;
+        }else{
+            mediaPlayer = MediaPlayer.create(context, R.raw.song1) ;
+        }
+
+
         mediaPlayer.start();
     }
 
     public void stopSong() {
-        mediaPlayer.pause();
+        //mediaPlayer.pause();
+        mediaPlayer.stop();
+        mediaPlayer.release();
     }
 }
 
