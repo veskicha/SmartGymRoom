@@ -8,8 +8,13 @@ import android.util.Log;
 
 public class SensorReading {
 
+    private boolean sensorsState = false;
     private DataQueueManager manager;
     private final int samplePeriod = 20000;
+
+    private SensorEventListener accelerometerListener;
+    private SensorEventListener gyroscopeListener;
+    private SensorEventListener magnometerListener;
 
     public SensorReading(DataQueueManager manager) {
         this.manager = manager;
@@ -17,7 +22,7 @@ public class SensorReading {
 
     private void accelerometer(SensorManager sensorManager) {
         Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        SensorEventListener sensorEventListener = new SensorEventListener() {
+        accelerometerListener = new SensorEventListener() {
             @Override
             public void onAccuracyChanged(Sensor sensor, int accuracy) {
                 // TODO: Handle accuracy changes
@@ -31,7 +36,7 @@ public class SensorReading {
             }
         };
         if (accelerometer != null) {
-            sensorManager.registerListener(sensorEventListener, accelerometer, samplePeriod);
+            sensorManager.registerListener(accelerometerListener, accelerometer, samplePeriod);
         } else {
             Log.d("D", "No accelerometer detected.");
         }
@@ -60,7 +65,7 @@ public class SensorReading {
 
     private void gyroscope(SensorManager sensorManager) {
         Sensor gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        SensorEventListener sensorEventListener = new SensorEventListener() {
+        gyroscopeListener = new SensorEventListener() {
             @Override
             public void onAccuracyChanged(Sensor sensor, int accuracy) {
                 // TODO: Handle accuracy changes
@@ -73,7 +78,7 @@ public class SensorReading {
             }
         };
         if (gyroscope != null) {
-            sensorManager.registerListener(sensorEventListener, gyroscope, samplePeriod);
+            sensorManager.registerListener(gyroscopeListener, gyroscope, samplePeriod);
         } else {
             Log.d("D", "No gyroscope detected.");
         }
@@ -81,7 +86,7 @@ public class SensorReading {
 
     private void magnometer(SensorManager sensorManager) {
         Sensor magnometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        SensorEventListener sensorEventListener = new SensorEventListener() {
+        magnometerListener = new SensorEventListener() {
             @Override
             public void onAccuracyChanged(Sensor sensor, int accuracy) {
                 // TODO: Handle accuracy changes
@@ -94,18 +99,40 @@ public class SensorReading {
             }
         };
         if (magnometer != null) {
-            sensorManager.registerListener(sensorEventListener, magnometer, samplePeriod);
+            sensorManager.registerListener(magnometerListener, magnometer, samplePeriod);
         } else {
             Log.d("D", "No magnometer detected.");
         }
     }
 
     public void initSensors(SensorManager sensorManager) {
-        accelerometer(sensorManager);
-        magnometer(sensorManager);
-        gyroscope(sensorManager);
-//        linearAcceleration(sensorManager);
+        if (!sensorsState) {
+            accelerometer(sensorManager);
+            magnometer(sensorManager);
+            gyroscope(sensorManager);
+            // linearAcceleration(sensorManager);
+            sensorsState = true;
+        }
     }
+
+    public void stopSensors(SensorManager sensorManager) {
+        if (sensorsState) {
+            sensorManager.unregisterListener(gyroscopeListener);
+            sensorManager.unregisterListener(accelerometerListener);
+            sensorManager.unregisterListener(magnometerListener);
+            sensorsState = false;
+        }
+    }
+
+    public void toggleSensors(SensorManager sensorManager) {
+        if (sensorsState) {
+            stopSensors(sensorManager);
+        } else {
+            initSensors(sensorManager);
+        }
+    }
+
+
 
 //    public double calculateMagnitude(double x, double y, double z) {
 //        return Math.sqrt(x * x + y * y + z * z);

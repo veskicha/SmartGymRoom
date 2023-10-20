@@ -74,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
         wekaManager = new Weka(this, manager);
         SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         sensors.initSensors(sensorManager);
+        Log.d("Sensors started", "in oncreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         predictionTextView = findViewById(R.id.prediction_text_view);
@@ -104,12 +105,13 @@ public class MainActivity extends AppCompatActivity {
                 if (!isButtonPressed) {
                     b.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.button_pressed, null));
                     b.setTextColor(Color.parseColor("#000000"));
-
                     b.setText("Stop");
+                    sensors.toggleSensors(sensorManager);
                 } else {
                     b.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.button_border, null));
                     b.setTextColor(Color.parseColor("#2fff65"));
                     b.setText("Start");
+                    sensors.toggleSensors(sensorManager);
                 }
                 isButtonPressed = !isButtonPressed;
             }
