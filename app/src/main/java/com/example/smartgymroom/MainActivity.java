@@ -17,30 +17,28 @@ import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.res.ResourcesCompat;
 
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Queue;
 import java.util.UUID;
 
 import weka.classifiers.Classifier;
-import weka.core.Attribute;
-import weka.core.DenseInstance;
-import weka.core.Instance;
-import weka.core.Instances;
 
 public class MainActivity extends AppCompatActivity {
 
+    private boolean isButtonPressed = false;
     private boolean init = false;
     private MediaManager mediaManager;
     private static final String TAG = "DebugLogs";
@@ -97,6 +95,25 @@ public class MainActivity extends AppCompatActivity {
         } else {
             Log.e(TAG, "could not get scanner object");
         }
+
+        Button button = findViewById(R.id.button);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Button b = (Button) v;
+                if (!isButtonPressed) {
+                    b.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.button_pressed, null));
+                    b.setTextColor(Color.parseColor("#000000"));
+
+                    b.setText("Stop");
+                } else {
+                    b.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.button_border, null));
+                    b.setTextColor(Color.parseColor("#2fff65"));
+                    b.setText("Start");
+                }
+                isButtonPressed = !isButtonPressed;
+            }
+        });
 
     }
     private final ScanCallback scanCallback = new ScanCallback() {
