@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:layout_marginTop="250dp">
+
+    <!-- Use a nested LinearLayout to place two TextViews side by side -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_gravity="center_horizontal">
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Current activity: "
+            android:textSize="40sp" />
+
+        <TextView
+            android:id="@+id/prediction_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="40sp" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/current_song"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Rihanna sings something cool"
+        android:layout_marginTop="50dp"
+        android:textSize="20sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:layout_marginTop="250dp">
+
+        <Button
+            android:id="@+id/button"
+            android:layout_width="229dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/button_border"
+            android:text="Start"
+            android:textColor="#2fff65"
+            android:textSize="25sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -33,6 +33,8 @@ android {
 
 dependencies {
 
+    implementation ("androidx.vectordrawable:vectordrawable:1.1.0")
+    implementation ("com.google.android.material:material:1.4.0")
     implementation ("io.reactivex.rxjava2:rxandroid:2.0.1")
     implementation ("io.reactivex.rxjava2:rxjava:2.0.8")
     implementation("androidx.appcompat:appcompat:1.6.1")
