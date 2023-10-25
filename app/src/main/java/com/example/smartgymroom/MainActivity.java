@@ -10,6 +10,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
+import android.bluetooth.BluetoothSocket;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
@@ -29,7 +30,9 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.res.ResourcesCompat;
 
+import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -70,6 +73,10 @@ public class MainActivity extends AppCompatActivity {
     @SuppressLint("MissingPermission")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if (checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED ||
+                checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_FINE_LOCATION}, 123);
+        }
         sensors = new SensorReading(manager);
         wekaManager = new Weka(this, manager);
         SensorManager sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -86,10 +93,7 @@ public class MainActivity extends AppCompatActivity {
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         scanner = adapter.getBluetoothLeScanner();
 
-        if (checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED ||
-                checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_FINE_LOCATION}, 123);
-        }
+
         if (scanner != null && !init) {
             scanner.startScan(filters, scanSettings, scanCallback);
             Log.d(TAG, "scan started");
@@ -123,22 +127,20 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             BluetoothDevice device = result.getDevice();
-            if (init) {
-                scanner.stopScan(this);
-            }
             @SuppressLint("MissingPermission") String deviceName = device.getName();
-            if ("ESP32".equals(deviceName)) {
-                Log.d(TAG, "ESP32 device found, attempting to connect...");
-                scanner.stopScan(this);
-                init = true;
+            if ("Nano 33 IoT".equals(deviceName)) {
+                Log.d(TAG, "Nano 33 IoT device found, attempting to connect...");
+                scanner.stopScan(this); // Stop the scan
 
                 // TODO: Add your connection logic here. You'll probably need a GATT callback.
-                device.connectGatt(MainActivity.this, false, gattCallback);
+                BluetoothGatt bluetoothGatt = device.connectGatt(MainActivity.this, false, gattCallback);
 
             } else {
-                Log.d(TAG, "Device found but not ESP32, continuing scan...");
+                Log.d(TAG, "Device found but not Nano 33 IoT, continuing scan...");
             }
         }
+
+
 
         @SuppressLint("MissingPermission")
         @Override
@@ -169,11 +171,61 @@ public class MainActivity extends AppCompatActivity {
 
         @SuppressLint("MissingPermission")
         @Override
+//        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+//            if (status == BluetoothGatt.GATT_SUCCESS) {
+//                Log.d(TAG, "in onservicesdiscovered");
+//
+//                // TODO: Here you can loop through available services and characteristics
+//                UUID SERVICE_UUID = UUID.fromString("180A");
+//                UUID CHARACTERISTIC_UUID = UUID.fromString("00002A57-0000-1000-80000-00805F9B34FB");
+//                BluetoothGattService service = gatt.getService(SERVICE_UUID);
+//
+//                if (service != null) {
+//                    BluetoothGattCharacteristic characteristic = service.getCharacteristic(CHARACTERISTIC_UUID);
+//
+//                    // Write your data to the characteristic here
+////                    byte[] data = "your_data_here".getBytes(); // Convert your data to bytes
+////                    characteristic.setValue(data);
+////                    boolean success = gatt.writeCharacteristic(characteristic);
+////
+////                    if (success) {
+////                        Log.d(TAG, "Writing characteristics successful");
+////                    } else {
+////                        Log.e(TAG, "Failed to write characteristics");
+////                    }
+//                } else {
+//                    Log.e(TAG, "Characteristic not found");
+//                }
+//
+////                if (service != null) {
+////                    BluetoothGattCharacteristic characteristic = service.getCharacteristic(CHARACTERISTIC_UUID);
+////                    gatt.setCharacteristicNotification(characteristic, true);
+//////                    BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"));
+//////                    descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+//////                    gatt.writeDescriptor(descriptor);
+////                    if ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0) {
+//////                        gatt.readCharacteristic(characteristic);
+////                        Log.d(TAG, "Writing characteristics..");
+////                    }
+////
+////                }
+//
+//                // to find the ones you're interested in.
+//                // For instance, you can call gatt.getServices() to retrieve a list of available services.
+//
+//            } else {
+//                Log.w(TAG, "onServicesDiscovered received: " + status);
+//            }
+//        }
+//        @SuppressLint("MissingPermission")
+//        @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 // TODO: Here you can loop through available services and characteristics
-                UUID SERVICE_UUID = UUID.fromString("2fe4da9b-57da-43a8-b8f9-8877344d7dc5");
-                UUID CHARACTERISTIC_UUID = UUID.fromString("541426fd-debd-471d-8e1c-a4a18a837028");
+                /**UUID SERVICE_UUID = UUID.fromString("2fe4da9b-57da-43a8-b8f9-8877344d7dc5");
+                 UUID CHARACTERISTIC_UUID = UUID.fromString("541426fd-debd-471d-8e1c-a4a18a837028");*/
+                UUID SERVICE_UUID = UUID.fromString("180A");
+                UUID CHARACTERISTIC_UUID = UUID.fromString("00002A57-0000-1000-80000-00805F9B34FB");
                 BluetoothGattService service = gatt.getService(SERVICE_UUID);
                 if (service != null) {
                     BluetoothGattCharacteristic characteristic = service.getCharacteristic(CHARACTERISTIC_UUID);
@@ -181,21 +233,13 @@ public class MainActivity extends AppCompatActivity {
                     BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"));
                     descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
                     gatt.writeDescriptor(descriptor);
-                    if ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0) {
-                        gatt.readCharacteristic(characteristic);
-                        Log.d(TAG, "Reading characteristics..");
+                    if (characteristic != null) {
+                        if ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0) {
+                            gatt.readCharacteristic(characteristic);
+                            Log.d(TAG, "Reading characteristics..");
+                        }
                     }
-
-                }
-
-                // to find the ones you're interested in.
-                // For instance, you can call gatt.getServices() to retrieve a list of available services.
-
-            } else {
-                Log.w(TAG, "onServicesDiscovered received: " + status);
-            }
-        }
-
+                }}}
     };
 
     private Classifier initializeWeka() {
