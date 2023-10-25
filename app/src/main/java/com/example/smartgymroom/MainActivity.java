@@ -45,6 +45,8 @@ public class MainActivity extends AppCompatActivity {
     private Weka wekaManager;
     private static final String modelName = "tests/test_model_with_high_sliding_window_size.model";
     private BluetoothLeScanner scanner;
+
+    private BluetoothAdapter adapter;
     private final List<ScanFilter> filters = new ArrayList<>();
     private final ScanSettings scanSettings = new ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
@@ -52,6 +54,8 @@ public class MainActivity extends AppCompatActivity {
     private SensorReading sensors;
     DataQueueManager manager = new DataQueueManager();
     TextView predictionTextView;
+
+    private BluetoothCommunication bluetooth = new BluetoothCommunication();
 
     private Handler handler = new Handler();
     private Runnable runnableCode = new Runnable() {
@@ -83,14 +87,19 @@ public class MainActivity extends AppCompatActivity {
 
 
         mediaManager = new MediaManager(this);
-        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+        adapter = BluetoothAdapter.getDefaultAdapter();
+        if (adapter == null){
+            Log.d(TAG, "adapter is null :(");
+        }else{
+            Log.d(TAG, "adapter is not null: ");
+        }
         scanner = adapter.getBluetoothLeScanner();
 
         if (checkSelfPermission(Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED ||
                 checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_FINE_LOCATION}, 123);
         }
-        if (scanner != null && !init) {
+        if (scanner != null) {
             scanner.startScan(filters, scanSettings, scanCallback);
             Log.d(TAG, "scan started");
         } else {
@@ -123,20 +132,16 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             BluetoothDevice device = result.getDevice();
-            if (init) {
-                scanner.stopScan(this);
-            }
             @SuppressLint("MissingPermission") String deviceName = device.getName();
-            if ("ESP32".equals(deviceName)) {
-                Log.d(TAG, "ESP32 device found, attempting to connect...");
-                scanner.stopScan(this);
-                init = true;
+            if ("Nano 33 IoT".equals(deviceName)) {
+                Log.d(TAG, "Nano 33 IoT device found, attempting to connect...");
+                scanner.stopScan(this); // Stop the scan
 
                 // TODO: Add your connection logic here. You'll probably need a GATT callback.
-                device.connectGatt(MainActivity.this, false, gattCallback);
+                BluetoothGatt bluetoothGatt = device.connectGatt(MainActivity.this, false, gattCallback);
 
             } else {
-                Log.d(TAG, "Device found but not ESP32, continuing scan...");
+                Log.d(TAG, "Device found but not Nano 33 IoT, continuing scan...");
             }
         }
 
@@ -145,9 +150,8 @@ public class MainActivity extends AppCompatActivity {
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
             Log.e(TAG, "Scan failed with error: " + errorCode);
-            if (!init) {
-                scanner.startScan(filters, scanSettings, this);
-            }
+            // If scan fails, you can retry by starting it again.
+            scanner.startScan(filters, scanSettings, this);
         }
 
 
@@ -181,21 +185,15 @@ public class MainActivity extends AppCompatActivity {
                     BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"));
                     descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
                     gatt.writeDescriptor(descriptor);
-                    if ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0) {
-                        gatt.readCharacteristic(characteristic);
-                        Log.d(TAG, "Reading characteristics..");
+                    if (characteristic != null) {
+                        if ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0) {
+                            gatt.readCharacteristic(characteristic);
+                            Log.d(TAG, "Reading characteristics..");
+                        }
                     }
-
                 }
-
-                // to find the ones you're interested in.
-                // For instance, you can call gatt.getServices() to retrieve a list of available services.
-
-            } else {
-                Log.w(TAG, "onServicesDiscovered received: " + status);
             }
         }
-
     };
 
     private Classifier initializeWeka() {

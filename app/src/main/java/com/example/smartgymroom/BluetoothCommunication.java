@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.ScanCallback;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.util.Log;
 import androidx.core.app.ActivityCompat;
 
 public class BluetoothCommunication {
@@ -13,7 +14,7 @@ public class BluetoothCommunication {
     private ScanCallback leScanCallback;
     private final BluetoothLeScanner bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
 
-    bluetoothGatt = device.connectGatt(this, false, gattCallback);
+    //bluetoothGatt = device.connectGatt(this, false, gattCallback);
     private void startScanning(String filter) {
         if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -33,5 +34,13 @@ public class BluetoothCommunication {
             return;
         }
         bluetoothLeScanner.stopScan(leScanCallback);
+    }
+
+    public void printBLE(){
+        startScanning("filter");
+        if (leScanCallback != null){
+            stopScanning();
+            Log.d("Found BLE devices:", leScanCallback.toString());
+        }
     }
 }
