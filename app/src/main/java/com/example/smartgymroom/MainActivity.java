@@ -221,25 +221,48 @@ public class MainActivity extends AppCompatActivity {
 //        @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
+                Log.d(TAG, "Status success");
+
                 // TODO: Here you can loop through available services and characteristics
                 /**UUID SERVICE_UUID = UUID.fromString("2fe4da9b-57da-43a8-b8f9-8877344d7dc5");
                  UUID CHARACTERISTIC_UUID = UUID.fromString("541426fd-debd-471d-8e1c-a4a18a837028");*/
-                UUID SERVICE_UUID = UUID.fromString("180A");
-                UUID CHARACTERISTIC_UUID = UUID.fromString("00002A57-0000-1000-80000-00805F9B34FB");
+                UUID SERVICE_UUID = UUID.fromString("00180A00-0010-00F8-0000-00805F9B34FB");
+                UUID CHARACTERISTIC_UUID = UUID.fromString("2fe4da9b-57da-43a8-b8f9-8877344d7dc5");
                 BluetoothGattService service = gatt.getService(SERVICE_UUID);
+                Log.d(TAG, "Before if");
+
                 if (service != null) {
+                    Log.d(TAG, "service not null");
+
                     BluetoothGattCharacteristic characteristic = service.getCharacteristic(CHARACTERISTIC_UUID);
-                    gatt.setCharacteristicNotification(characteristic, true);
-                    BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"));
-                    descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                    gatt.writeDescriptor(descriptor);
-                    if (characteristic != null) {
-                        if ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0) {
-                            gatt.readCharacteristic(characteristic);
-                            Log.d(TAG, "Reading characteristics..");
-                        }
+//                    gatt.setCharacteristicNotification(characteristic, true);
+//                    BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"));
+//                    descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+//                    gatt.writeDescriptor(descriptor);
+                    byte[] data = "0".getBytes(); // Convert your data to bytes
+                    characteristic.setValue(data);
+                    boolean success = gatt.writeCharacteristic(characteristic);
+
+                    if (success) {
+                        Log.d(TAG, "Writing characteristics successful");
+                    } else {
+                        Log.e(TAG, "Failed to write characteristics");
                     }
-                }}}
+//                    if (characteristic != null) {
+//                        if ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0) {
+//                            gatt.readCharacteristic(characteristic);
+//                            Log.d(TAG, "Reading characteristics..");
+//                        }
+//                    }
+                } else {
+                    Log.d(TAG, "go home");
+
+                }
+            } else {
+                Log.d(TAG, "go home 2.0");
+
+            }
+        }
     };
 
     private Classifier initializeWeka() {
