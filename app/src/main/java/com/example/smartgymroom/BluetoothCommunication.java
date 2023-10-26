@@ -27,15 +27,19 @@ public class BluetoothCommunication {
     private static final String TAG = "BluetoothLogs";
     private BluetoothLeScanner scanner;
     private final List<ScanFilter> filters = new ArrayList<>();
+    private BluetoothGatt bGatt;
+    private BluetoothGattCharacteristic characteristic;
+    private final String roomNumber;
+
     private final ScanSettings scanSettings = new ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
             .build();
 
-    BluetoothCommunication(Context context) {
+    BluetoothCommunication(Context context, String roomNumber) {
         this.context = context;
+        this.roomNumber = roomNumber;
 
     }
-
 
 
     public final ScanCallback scanCallback = new ScanCallback() {
@@ -44,11 +48,11 @@ public class BluetoothCommunication {
         public void onScanResult(int callbackType, ScanResult result) {
             BluetoothDevice device = result.getDevice();
             @SuppressLint("MissingPermission") String deviceName = device.getName();
-            if ("Nano 33 IoT".equals(deviceName)) {
+            if (roomNumber.equals(deviceName)) {
                 Log.d(TAG, "Nano 33 IoT device found, attempting to connect...");
                 scanner.stopScan(this); // Stop the scan
 
-                device.connectGatt(context, false, gattCallback);
+                bGatt = device.connectGatt(context, false, gattCallback);
 
             } else {
                 Log.d(TAG, "Device found but not Nano 33 IoT, continuing scan...");
@@ -91,16 +95,8 @@ public class BluetoothCommunication {
                 if (service != null) {
                     Log.d(TAG, "service not null");
 
-                    BluetoothGattCharacteristic characteristic = service.getCharacteristic(CHARACTERISTIC_UUID);
-                    byte[] data = "1".getBytes(); // Convert your data to bytes
-                    characteristic.setValue(data);
-                    boolean success = gatt.writeCharacteristic(characteristic);
-
-                    if (success) {
-                        Log.d(TAG, "Writing characteristics successful");
-                    } else {
-                        Log.e(TAG, "Failed to write characteristics");
-                    }
+                    characteristic = service.getCharacteristic(CHARACTERISTIC_UUID);
+                    sendMessage("1");
                 } else {
                     Log.d(TAG, "Service is null");
 
@@ -111,6 +107,23 @@ public class BluetoothCommunication {
             }
         }
     };
+
+    private void sendMessage(String message) {
+        if(characteristic!=null&&bGatt!=null) {
+            byte[] data = message.getBytes(); // Convert your data to bytes
+            characteristic.setValue(data);
+            @SuppressLint("MissingPermission") boolean success = bGatt.writeCharacteristic(characteristic);
+
+            if (success) {
+                Log.d(TAG, "Writing characteristics successful");
+            } else {
+                Log.e(TAG, "Failed to write characteristics");
+            }
+        } else {
+            Log.e(TAG, "In sendMessage characteristic or bGatt was null");
+
+        }
+    }
 
     @SuppressLint("MissingPermission")
     public void startScan() {
