@@ -102,7 +102,7 @@ public class CurrentSessionFragment extends Fragment {
 
         handler.post(runnableCode);
 
-        BluetoothCommunication bluetooth = new BluetoothCommunication(activity);
+        BluetoothCommunication bluetooth = new BluetoothCommunication(activity, "Room 1");
         bluetooth.startScan();
 
         mediaManager = new MediaManager(activity);  // Pass the host activity as context

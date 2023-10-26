@@ -96,7 +96,7 @@ public class BluetoothCommunication {
                     Log.d(TAG, "service not null");
 
                     characteristic = service.getCharacteristic(CHARACTERISTIC_UUID);
-                    sendMessage("1");
+                    sendMessage("2");
                 } else {
                     Log.d(TAG, "Service is null");
 
