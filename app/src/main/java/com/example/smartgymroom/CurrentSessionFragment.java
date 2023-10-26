@@ -47,6 +47,8 @@ import weka.classifiers.Classifier;
 
 public class CurrentSessionFragment extends Fragment {
 
+    private Activity activity;
+
     private Chronometer chronometer;
     private long pauseOffset;
     private boolean running;
@@ -90,7 +92,7 @@ public class CurrentSessionFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        Activity activity = requireActivity();
+        activity = requireActivity();
 
         sensors = new SensorReading(manager);
         wekaManager = new Weka(activity, manager);  // Pass the host activity as context
@@ -99,6 +101,9 @@ public class CurrentSessionFragment extends Fragment {
         predictionTextView = view.findViewById(R.id.prediction_text_view);  // Use the provided view
 
         handler.post(runnableCode);
+
+        BluetoothCommunication bluetooth = new BluetoothCommunication(activity);
+        bluetooth.startScan();
 
         mediaManager = new MediaManager(activity);  // Pass the host activity as context
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
@@ -145,10 +150,8 @@ public class CurrentSessionFragment extends Fragment {
             }
         });
 
-
         chronometer = activity.findViewById(R.id.chronometer);
         chronometer.setFormat("%s");
-
     }
 
     private final ScanCallback scanCallback = new ScanCallback() {
