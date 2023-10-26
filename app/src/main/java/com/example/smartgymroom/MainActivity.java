@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         mediaManager = new MediaManager(this);
-        BluetoothCommunication bluetooth = new BluetoothCommunication(this);
+        BluetoothCommunication bluetooth = new BluetoothCommunication(this,"Room 1");
         bluetooth.startScan();
 
         Button button = findViewById(R.id.button);
