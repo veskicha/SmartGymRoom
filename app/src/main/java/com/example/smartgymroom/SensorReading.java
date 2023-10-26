@@ -124,6 +124,14 @@ public class SensorReading {
         }
     }
 
+    public void toggleSensors(SensorManager sensorManager) {
+        if (sensorsState) {
+            stopSensors(sensorManager);
+        } else {
+            initSensors(sensorManager);
+        }
+    }
+
 
 
 //    public double calculateMagnitude(double x, double y, double z) {
