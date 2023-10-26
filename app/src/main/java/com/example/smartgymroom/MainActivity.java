@@ -19,14 +19,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
         bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
             Fragment selectedFragment = null;
             if (item.getItemId() == R.id.currentSession)
-                    selectedFragment = new CurrentSessionFragment();
+                selectedFragment = new CurrentSessionFragment();
             else {
-                    selectedFragment = new HistoryFragment();
+                selectedFragment = new HistoryFragment();
             }
 
             FragmentManager fragmentManager = getSupportFragmentManager();
@@ -37,13 +36,12 @@ public class MainActivity extends AppCompatActivity {
                         R.anim.slide_in_left,
                         R.anim.slide_out_right
                 );
-            }else{
+            }else {
                 fragmentTransaction.setCustomAnimations(
                         R.anim.slide_in_right,
                         R.anim.slide_out_left
                 );
             }
-
             fragmentTransaction.replace(R.id.fragment_container, selectedFragment);
 
             fragmentTransaction.addToBackStack(null);

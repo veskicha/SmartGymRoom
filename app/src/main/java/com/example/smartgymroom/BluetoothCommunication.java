@@ -1,37 +1,128 @@
 package com.example.smartgymroom;
 
+import android.annotation.SuppressLint;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattService;
+import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
 import android.content.Context;
-import android.content.pm.PackageManager;
-import androidx.core.app.ActivityCompat;
+import android.util.Log;
+
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 public class BluetoothCommunication {
-    private Context context;
-    private BluetoothAdapter bluetoothAdapter;
-    private ScanCallback leScanCallback;
-    private final BluetoothLeScanner bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
 
-    //bluetoothGatt = device.connectGatt(this, false, gattCallback);
-    private void startScanning(String filter) {
-        if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        bluetoothLeScanner.startScan(leScanCallback);
+    private final Context context;
+    private static final String TAG = "BluetoothLogs";
+    private BluetoothLeScanner scanner;
+    private final List<ScanFilter> filters = new ArrayList<>();
+    private final ScanSettings scanSettings = new ScanSettings.Builder()
+            .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
+            .build();
+
+    BluetoothCommunication(Context context) {
+        this.context = context;
+
     }
 
-    private void stopScanning() {
-        if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
-            return;
+
+
+    public final ScanCallback scanCallback = new ScanCallback() {
+        @SuppressLint("MissingPermission")
+        @Override
+        public void onScanResult(int callbackType, ScanResult result) {
+            BluetoothDevice device = result.getDevice();
+            @SuppressLint("MissingPermission") String deviceName = device.getName();
+            if ("Nano 33 IoT".equals(deviceName)) {
+                Log.d(TAG, "Nano 33 IoT device found, attempting to connect...");
+                scanner.stopScan(this); // Stop the scan
+
+                device.connectGatt(context, false, gattCallback);
+
+            } else {
+                Log.d(TAG, "Device found but not Nano 33 IoT, continuing scan...");
+            }
         }
-        bluetoothLeScanner.stopScan(leScanCallback);
+
+
+
+        @SuppressLint("MissingPermission")
+        @Override
+        public void onScanFailed(int errorCode) {
+            super.onScanFailed(errorCode);
+            Log.e(TAG, "Scan failed with error: " + errorCode);
+            scanner.startScan(filters, scanSettings, this);
+
+        }
+    };
+
+    private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
+        @SuppressLint("MissingPermission")
+        @Override
+        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+            if (newState == BluetoothProfile.STATE_CONNECTED) {
+                Log.i(TAG, "Connected to GATT server.");
+                Log.i(TAG, "Attempting to start service discovery:" + gatt.discoverServices());
+
+            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                Log.i(TAG, "Disconnected from GATT server.");
+            }
+        }
+
+        @SuppressLint("MissingPermission")
+        @Override
+        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                Log.d(TAG, "Status success");
+                UUID SERVICE_UUID = UUID.fromString("00180A00-0010-00F8-0000-00805F9B34FB");
+                UUID CHARACTERISTIC_UUID = UUID.fromString("2fe4da9b-57da-43a8-b8f9-8877344d7dc5");
+                BluetoothGattService service = gatt.getService(SERVICE_UUID);
+                if (service != null) {
+                    Log.d(TAG, "service not null");
+
+                    BluetoothGattCharacteristic characteristic = service.getCharacteristic(CHARACTERISTIC_UUID);
+                    byte[] data = "1".getBytes(); // Convert your data to bytes
+                    characteristic.setValue(data);
+                    boolean success = gatt.writeCharacteristic(characteristic);
+
+                    if (success) {
+                        Log.d(TAG, "Writing characteristics successful");
+                    } else {
+                        Log.e(TAG, "Failed to write characteristics");
+                    }
+                } else {
+                    Log.d(TAG, "Service is null");
+
+                }
+            } else {
+                Log.d(TAG, "Bluetooth status not success");
+
+            }
+        }
+    };
+
+    @SuppressLint("MissingPermission")
+    public void startScan() {
+        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+        scanner = adapter.getBluetoothLeScanner();
+
+
+        if (scanner != null) {
+            scanner.startScan(filters, scanSettings, scanCallback);
+            Log.d(TAG, "scan started");
+        } else {
+            Log.e(TAG, "could not get scanner object");
+        }
     }
 }
