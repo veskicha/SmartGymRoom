@@ -137,5 +137,6 @@ public class BluetoothCommunication {
         } else {
             Log.e(TAG, "could not get scanner object");
         }
+        bluetoothLeScanner.stopScan(leScanCallback);
     }
 }
