@@ -5,6 +5,8 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -17,6 +19,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
         bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
             Fragment selectedFragment = null;
@@ -26,13 +29,29 @@ public class MainActivity extends AppCompatActivity {
                     selectedFragment = new HistoryFragment();
             }
 
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container, selectedFragment)
-                    .commit();
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+
+            if (item.getItemId() == R.id.currentSession){
+                fragmentTransaction.setCustomAnimations(
+                        R.anim.slide_in_left,
+                        R.anim.slide_out_right
+                );
+            }else{
+                fragmentTransaction.setCustomAnimations(
+                        R.anim.slide_in_right,
+                        R.anim.slide_out_left
+                );
+            }
+
+            fragmentTransaction.replace(R.id.fragment_container, selectedFragment);
+
+            fragmentTransaction.addToBackStack(null);
+
+            fragmentTransaction.commit();
             return true;
         });
 
-        // Optionally, load the CurrentSessionFragment by default
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container, new CurrentSessionFragment())
                 .commit();

@@ -23,11 +23,14 @@ import android.graphics.Color;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.Chronometer;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -43,6 +46,10 @@ import java.util.UUID;
 import weka.classifiers.Classifier;
 
 public class CurrentSessionFragment extends Fragment {
+
+    private Chronometer chronometer;
+    private long pauseOffset;
+    private boolean running;
     private boolean isButtonPressed = false;
     private boolean init = false;
     private MediaManager mediaManager;
@@ -119,16 +126,29 @@ public class CurrentSessionFragment extends Fragment {
                     b.setTextColor(Color.parseColor("#000000"));
                     b.setText("Stop");
                     sensors.initSensors(sensorManager);
+                    startChronometer(activity.findViewById(R.id.chronometer));
                 } else {
                     b.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.button_border, null));
                     b.setTextColor(Color.parseColor("#2fff65"));
                     b.setText("Start");
                     sensors.stopSensors(sensorManager);
+                    pauseChronometer(activity.findViewById(R.id.chronometer));
+                    new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            resetChronometer(activity.findViewById(R.id.chronometer));
+                        }
+                    }, 3000);
 
                 }
                 isButtonPressed = !isButtonPressed;
             }
         });
+
+
+        chronometer = activity.findViewById(R.id.chronometer);
+        chronometer.setFormat("%s");
+
     }
 
     private final ScanCallback scanCallback = new ScanCallback() {
@@ -221,5 +241,26 @@ public class CurrentSessionFragment extends Fragment {
             e.printStackTrace();
         }
         return classifier;
+    }
+
+    public void startChronometer(View v) {
+        if (!running) {
+            chronometer.setBase(SystemClock.elapsedRealtime() - pauseOffset);
+            chronometer.start();
+            running = true;
+        }
+    }
+
+    public void pauseChronometer(View v) {
+        if (running) {
+            chronometer.stop();
+            pauseOffset = SystemClock.elapsedRealtime() - chronometer.getBase();
+            running = false;
+        }
+    }
+
+    public void resetChronometer(View v) {
+        chronometer.setBase(SystemClock.elapsedRealtime());
+        pauseOffset = 0;
     }
 }

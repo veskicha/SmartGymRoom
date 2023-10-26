@@ -13,7 +13,7 @@ public class BluetoothCommunication {
     private ScanCallback leScanCallback;
     private final BluetoothLeScanner bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
 
-    bluetoothGatt = device.connectGatt(this, false, gattCallback);
+    //bluetoothGatt = device.connectGatt(this, false, gattCallback);
     private void startScanning(String filter) {
         if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
