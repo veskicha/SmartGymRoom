@@ -26,7 +26,6 @@ public class BluetoothCommunication {
     private final Context context;
     private static final String TAG = "BluetoothLogs";
     private BluetoothLeScanner scanner;
-    private boolean init = false;
     private final List<ScanFilter> filters = new ArrayList<>();
     private final ScanSettings scanSettings = new ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
@@ -49,8 +48,7 @@ public class BluetoothCommunication {
                 Log.d(TAG, "Nano 33 IoT device found, attempting to connect...");
                 scanner.stopScan(this); // Stop the scan
 
-                // TODO: Add your connection logic here. You'll probably need a GATT callback.
-                BluetoothGatt bluetoothGatt = device.connectGatt(context, false, gattCallback);
+                device.connectGatt(context, false, gattCallback);
 
             } else {
                 Log.d(TAG, "Device found but not Nano 33 IoT, continuing scan...");
@@ -64,9 +62,8 @@ public class BluetoothCommunication {
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
             Log.e(TAG, "Scan failed with error: " + errorCode);
-            if (!init) {
-                scanner.startScan(filters, scanSettings, this);
-            }
+            scanner.startScan(filters, scanSettings, this);
+
         }
     };
 
@@ -95,7 +92,7 @@ public class BluetoothCommunication {
                     Log.d(TAG, "service not null");
 
                     BluetoothGattCharacteristic characteristic = service.getCharacteristic(CHARACTERISTIC_UUID);
-                    byte[] data = "0".getBytes(); // Convert your data to bytes
+                    byte[] data = "1".getBytes(); // Convert your data to bytes
                     characteristic.setValue(data);
                     boolean success = gatt.writeCharacteristic(characteristic);
 
@@ -121,7 +118,7 @@ public class BluetoothCommunication {
         scanner = adapter.getBluetoothLeScanner();
 
 
-        if (scanner != null && !init) {
+        if (scanner != null) {
             scanner.startScan(filters, scanSettings, scanCallback);
             Log.d(TAG, "scan started");
         } else {
