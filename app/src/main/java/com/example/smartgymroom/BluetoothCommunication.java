@@ -88,15 +88,9 @@ public class BluetoothCommunication {
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 Log.d(TAG, "Status success");
-
-                // TODO: Here you can loop through available services and characteristics
-                /**UUID SERVICE_UUID = UUID.fromString("2fe4da9b-57da-43a8-b8f9-8877344d7dc5");
-                 UUID CHARACTERISTIC_UUID = UUID.fromString("541426fd-debd-471d-8e1c-a4a18a837028");*/
                 UUID SERVICE_UUID = UUID.fromString("00180A00-0010-00F8-0000-00805F9B34FB");
                 UUID CHARACTERISTIC_UUID = UUID.fromString("2fe4da9b-57da-43a8-b8f9-8877344d7dc5");
                 BluetoothGattService service = gatt.getService(SERVICE_UUID);
-                Log.d(TAG, "Before if");
-
                 if (service != null) {
                     Log.d(TAG, "service not null");
 
@@ -110,18 +104,12 @@ public class BluetoothCommunication {
                     } else {
                         Log.e(TAG, "Failed to write characteristics");
                     }
-//                    if (characteristic != null) {
-//                        if ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0) {
-//                            gatt.readCharacteristic(characteristic);
-//                            Log.d(TAG, "Reading characteristics..");
-//                        }
-//                    }
                 } else {
-                    Log.d(TAG, "go home");
+                    Log.d(TAG, "Service is null");
 
                 }
             } else {
-                Log.d(TAG, "go home 2.0");
+                Log.d(TAG, "Bluetooth status not success");
 
             }
         }
