@@ -37,6 +37,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+
+import com.example.smartgymroom.BeaconHandler;
+import com.example.smartgymroom.Location;
+import com.example.smartgymroom.Location.*;
+
 
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
@@ -66,6 +72,11 @@ public class CurrentSessionFragment extends Fragment {
     private SensorReading sensors;
     DataQueueManager manager = new DataQueueManager();
     TextView predictionTextView;
+
+    private BeaconHandler beaconHandler;
+    private static final int PERMISSION_REQUEST_CODE = 123;
+    private BeaconViewModel viewModel;
+    private Location location = new Location();
 
     private Handler handler = new Handler();
     private Runnable runnableCode = new Runnable() {
@@ -109,6 +120,11 @@ public class CurrentSessionFragment extends Fragment {
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         scanner = adapter.getBluetoothLeScanner();
 
+
+        viewModel = new ViewModelProvider(this).get(BeaconViewModel.class);
+        beaconHandler = new BeaconHandler(requireContext(), viewModel);
+        beaconHandler.createBeacon();
+
         if (activity.checkSelfPermission(android.Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED ||
                 activity.checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{android.Manifest.permission.BLUETOOTH_CONNECT, android.Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_FINE_LOCATION}, 123);
@@ -132,6 +148,7 @@ public class CurrentSessionFragment extends Fragment {
                     b.setText("Stop");
                     sensors.initSensors(sensorManager);
                     startChronometer(activity.findViewById(R.id.chronometer));
+                    goToRoom();
                 } else {
                     b.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.button_border, null));
                     b.setTextColor(Color.parseColor("#2fff65"));
@@ -152,6 +169,30 @@ public class CurrentSessionFragment extends Fragment {
 
         chronometer = activity.findViewById(R.id.chronometer);
         chronometer.setFormat("%s");
+    }
+
+    private void goToRoom() {
+        Boolean currentState = viewModel.getIsBeaconSearchStarted();
+        Log.d("no", currentState.toString());
+        if (currentState != null && currentState) {
+            beaconHandler.stopBeaconMonitoring();
+            viewModel.getComparedBeacons();
+            Log.d("beaconKnown", "Here new list " + viewModel.getListOfKnownBeacons());
+            Point point = location.getOurLocation(viewModel.getComparedBeaconsList());
+            if (point == null) {
+//                showErrorMessage();
+            } else {
+                Log.d("ourpoint", point.toString());
+            }
+            viewModel.setBeaconsState(!currentState);
+            Log.d("no", Boolean.toString(viewModel.getIsBeaconSearchStarted()));
+        } else {
+            beaconHandler.startBeaconMonitoring();
+            viewModel.setBeaconsState(!currentState);
+            viewModel.deleteBeacons();
+            Log.d("no", Boolean.toString(viewModel.getIsBeaconSearchStarted()));
+        }
+
     }
 
     private final ScanCallback scanCallback = new ScanCallback() {
