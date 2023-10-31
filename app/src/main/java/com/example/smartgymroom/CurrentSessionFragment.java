@@ -2,21 +2,8 @@ package com.example.smartgymroom;
 
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
-import android.bluetooth.BluetoothGattService;
-import android.bluetooth.BluetoothProfile;
-import android.bluetooth.le.BluetoothLeScanner;
-import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
-import android.bluetooth.le.ScanResult;
-import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -39,15 +26,12 @@ import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.example.smartgymroom.BeaconHandler;
-import com.example.smartgymroom.Location;
 import com.example.smartgymroom.Location.*;
 
 
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import weka.classifiers.Classifier;
 
@@ -64,11 +48,11 @@ public class CurrentSessionFragment extends Fragment {
     private static final String TAG = "DebugLogs";
     private Weka wekaManager;
     private static final String modelName = "tests/test_model_with_high_sliding_window_size.model";
-    private BluetoothLeScanner scanner;
+//    private BluetoothLeScanner scanner;
     private final List<ScanFilter> filters = new ArrayList<>();
-    private final ScanSettings scanSettings = new ScanSettings.Builder()
-            .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
-            .build();
+//    private final ScanSettings scanSettings = new ScanSettings.Builder()
+//            .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
+//            .build();
     private SensorReading sensors;
     DataQueueManager manager = new DataQueueManager();
     TextView predictionTextView;
@@ -113,16 +97,11 @@ public class CurrentSessionFragment extends Fragment {
 
         handler.post(runnableCode);
 
-        BluetoothCommunication bluetooth = new BluetoothCommunication(activity, "Room 1");
-        bluetooth.startScan();
-
         mediaManager = new MediaManager(activity);  // Pass the host activity as context
-        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
-        scanner = adapter.getBluetoothLeScanner();
 
 
         viewModel = new ViewModelProvider(this).get(BeaconViewModel.class);
-        beaconHandler = new BeaconHandler(requireContext(), viewModel);
+        beaconHandler = new BeaconHandler(requireContext(), viewModel,this);
         beaconHandler.createBeacon();
 
         if (activity.checkSelfPermission(android.Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED ||
@@ -130,12 +109,6 @@ public class CurrentSessionFragment extends Fragment {
             requestPermissions(new String[]{android.Manifest.permission.BLUETOOTH_CONNECT, android.Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_FINE_LOCATION}, 123);
         }
 
-        if (scanner != null && !init) {
-            scanner.startScan(filters, scanSettings, scanCallback);
-            Log.d(TAG, "scan started");
-        } else {
-            Log.e(TAG, "could not get scanner object");
-        }
 
         Button button = view.findViewById(R.id.button);
         button.setOnClickListener(new View.OnClickListener() {
@@ -148,7 +121,7 @@ public class CurrentSessionFragment extends Fragment {
                     b.setText("Stop");
                     sensors.initSensors(sensorManager);
                     startChronometer(activity.findViewById(R.id.chronometer));
-                    goToRoom();
+                    startMonitoring();
                 } else {
                     b.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.button_border, null));
                     b.setTextColor(Color.parseColor("#2fff65"));
@@ -171,109 +144,33 @@ public class CurrentSessionFragment extends Fragment {
         chronometer.setFormat("%s");
     }
 
-    private void goToRoom() {
+    private void startMonitoring() {
+        String tag = "monitoring";
         Boolean currentState = viewModel.getIsBeaconSearchStarted();
-        Log.d("no", currentState.toString());
-        if (currentState != null && currentState) {
-            beaconHandler.stopBeaconMonitoring();
-            viewModel.getComparedBeacons();
-            Log.d("beaconKnown", "Here new list " + viewModel.getListOfKnownBeacons());
-            Point point = location.getOurLocation(viewModel.getComparedBeaconsList());
-            if (point == null) {
-//                showErrorMessage();
-            } else {
-                Log.d("ourpoint", point.toString());
-            }
-            viewModel.setBeaconsState(!currentState);
-            Log.d("no", Boolean.toString(viewModel.getIsBeaconSearchStarted()));
-        } else {
-            beaconHandler.startBeaconMonitoring();
-            viewModel.setBeaconsState(!currentState);
-            viewModel.deleteBeacons();
-            Log.d("no", Boolean.toString(viewModel.getIsBeaconSearchStarted()));
-        }
+        Log.d(tag, currentState.toString());
 
+        beaconHandler.startBeaconMonitoring();
+        viewModel.setBeaconsState(!currentState);
+        viewModel.deleteBeacons();
+        Log.d(tag, Boolean.toString(viewModel.getIsBeaconSearchStarted()));
     }
 
-    private final ScanCallback scanCallback = new ScanCallback() {
-        @SuppressLint("MissingPermission")
-        @Override
-        public void onScanResult(int callbackType, ScanResult result) {
-            BluetoothDevice device = result.getDevice();
-            if (init) {
-                scanner.stopScan(this);
-            }
-            @SuppressLint("MissingPermission") String deviceName = device.getName();
-            if ("ESP32".equals(deviceName)) {
-                Log.d(TAG, "ESP32 device found, attempting to connect...");
-                scanner.stopScan(this);
-                init = true;
+    public void foundBeacons(){
+        String tag = "monitoring";
+        Log.d(tag, "found 3 beacons");
 
-                // TODO: Add your connection logic here. You'll probably need a GATT callback.
-                device.connectGatt(requireActivity(), false, gattCallback);
+        beaconHandler.stopBeaconMonitoring();
 
-            } else {
-                Log.d(TAG, "Device found but not ESP32, continuing scan...");
-            }
-        }
+        Point point = location.getOurLocation(viewModel.getComparedBeaconsList());
 
-        @SuppressLint("MissingPermission")
-        @Override
-        public void onScanFailed(int errorCode) {
-            super.onScanFailed(errorCode);
-            Log.e(TAG, "Scan failed with error: " + errorCode);
-            if (!init) {
-                scanner.startScan(filters, scanSettings, this);
-            }
-        }
+        Log.d(tag, point.toString()+ " is our location");
+        Room roomFinder = new Room();
+        int room = roomFinder.getRoom(point);
 
+        BluetoothCommunication bluetooth = new BluetoothCommunication(activity, 0);
+        bluetooth.startScan();
 
-    };
-
-    private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
-
-        @SuppressLint("MissingPermission")
-        @Override
-        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Log.i(TAG, "Connected to GATT server.");
-                Log.i(TAG, "Attempting to start service discovery:" + gatt.discoverServices());
-
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                Log.i(TAG, "Disconnected from GATT server.");
-            }
-        }
-
-        @SuppressLint("MissingPermission")
-        @Override
-        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                // TODO: Here you can loop through available services and characteristics
-                UUID SERVICE_UUID = UUID.fromString("2fe4da9b-57da-43a8-b8f9-8877344d7dc5");
-                UUID CHARACTERISTIC_UUID = UUID.fromString("541426fd-debd-471d-8e1c-a4a18a837028");
-                BluetoothGattService service = gatt.getService(SERVICE_UUID);
-                if (service != null) {
-                    BluetoothGattCharacteristic characteristic = service.getCharacteristic(CHARACTERISTIC_UUID);
-                    gatt.setCharacteristicNotification(characteristic, true);
-                    BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"));
-                    descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                    gatt.writeDescriptor(descriptor);
-                    if ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0) {
-                        gatt.readCharacteristic(characteristic);
-                        Log.d(TAG, "Reading characteristics..");
-                    }
-
-                }
-
-                // to find the ones you're interested in.
-                // For instance, you can call gatt.getServices() to retrieve a list of available services.
-
-            } else {
-                Log.w(TAG, "onServicesDiscovered received: " + status);
-            }
-        }
-
-    };
+    }
 
     private Classifier initializeWeka() {
         Classifier classifier = null;

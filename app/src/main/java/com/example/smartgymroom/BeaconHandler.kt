@@ -11,7 +11,7 @@ import org.altbeacon.beacon.Beacon
 import org.altbeacon.beacon.BeaconParser
 import org.altbeacon.beacon.BeaconTransmitter
 
-class BeaconHandler(val context: Context, private val viewModel: BeaconViewModel) {
+class BeaconHandler(val context: Context, private val viewModel: BeaconViewModel, val fragment: CurrentSessionFragment) {
 
     private val beaconManager = BeaconManager.getInstanceForApplication(context)
     val beaconParser = BeaconParser()
@@ -20,6 +20,7 @@ class BeaconHandler(val context: Context, private val viewModel: BeaconViewModel
 
     private val TAG = "BeaconInfo"
     val region = Region("all-beacons-region", null, null, null)
+
 
     fun startBeaconMonitoring() {
         beaconManager.foregroundScanPeriod = 500L
@@ -62,9 +63,15 @@ class BeaconHandler(val context: Context, private val viewModel: BeaconViewModel
         if (!beacons.isEmpty()) {
             viewModel.updateRangedBeacons(beacons)
         }
+        Log.d(TAG, "Seen: ${viewModel.allSeenBeacons.count()} beacons")
+        if (viewModel.allSeenBeacons.count()==3){
+            fragment.foundBeacons()
+        }
+
         for (beacon: Beacon in beacons) {
             Log.d(TAG, "$beacon about ${beacon.distance} meters away")
         }
+
     }
 
 

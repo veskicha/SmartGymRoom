@@ -29,13 +29,19 @@ public class BluetoothCommunication {
     private final List<ScanFilter> filters = new ArrayList<>();
     private BluetoothGatt bGatt;
     private BluetoothGattCharacteristic characteristic;
-    private final String roomNumber;
+    private final int roomNumber;
+    private boolean foundLights = false;
+    private boolean foundMusic = false;
+
+
+    String[][] roomDetails = {{"lights 0","JBL Go 3"} ,{"lights 1","idk"}};
+
 
     private final ScanSettings scanSettings = new ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
             .build();
 
-    BluetoothCommunication(Context context, String roomNumber) {
+    BluetoothCommunication(Context context, int roomNumber) {
         this.context = context;
         this.roomNumber = roomNumber;
 
@@ -46,16 +52,26 @@ public class BluetoothCommunication {
         @SuppressLint("MissingPermission")
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
+            String lightsName = roomDetails[roomNumber][0];
+            String musicName = roomDetails[roomNumber][1];
+
             BluetoothDevice device = result.getDevice();
             @SuppressLint("MissingPermission") String deviceName = device.getName();
-            if (roomNumber.equals(deviceName)) {
-                Log.d(TAG, "Nano 33 IoT device found, attempting to connect...");
-                scanner.stopScan(this); // Stop the scan
-
+            if (lightsName.equals(deviceName)&&!foundLights) {
+                Log.d(TAG, "Lights device found, attempting to connect...");
+                foundLights = true;
                 bGatt = device.connectGatt(context, false, gattCallback);
 
-            } else {
-                Log.d(TAG, "Device found but not Nano 33 IoT, continuing scan...");
+//            } else
+//            if(musicName.equals(deviceName)&&!foundMusic){
+//                Log.d(TAG, "Music device found, attempting to connect...");
+//                foundMusic = true;
+//                bGatt = device.connectGatt(context, false, gattCallback);
+//
+            }else if(foundMusic&&foundLights){
+                scanner.stopScan(this);
+            }else if (deviceName!=null){
+                Log.d(TAG, deviceName+ " found, continuing scan...");
             }
         }
 
@@ -70,6 +86,8 @@ public class BluetoothCommunication {
 
         }
     };
+
+
 
     private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
         @SuppressLint("MissingPermission")
