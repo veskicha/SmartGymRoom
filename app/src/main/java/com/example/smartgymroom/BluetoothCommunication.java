@@ -22,6 +22,24 @@ import java.util.List;
 import java.util.UUID;
 
 public class BluetoothCommunication {
+<<<<<<<<< Temporary merge branch 1
+    private Context context;
+    private BluetoothAdapter bluetoothAdapter;
+    private ScanCallback leScanCallback;
+    private final BluetoothLeScanner bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
+
+    //bluetoothGatt = device.connectGatt(this, false, gattCallback);
+    private void startScanning(String filter) {
+        if (ActivityCompat.checkSelfPermission(context, android.Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+=========
 
     private final Context context;
     private static final String TAG = "BluetoothLogs";
@@ -35,11 +53,12 @@ public class BluetoothCommunication {
             .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
             .build();
 
-    BluetoothCommunication(Context context, String roomNumber) {
+    BluetoothCommunication(Context context) {
         this.context = context;
         this.roomNumber = roomNumber;
 
     }
+
 
 
     public final ScanCallback scanCallback = new ScanCallback() {
@@ -48,11 +67,11 @@ public class BluetoothCommunication {
         public void onScanResult(int callbackType, ScanResult result) {
             BluetoothDevice device = result.getDevice();
             @SuppressLint("MissingPermission") String deviceName = device.getName();
-            if (roomNumber.equals(deviceName)) {
+            if ("Nano 33 IoT".equals(deviceName)) {
                 Log.d(TAG, "Nano 33 IoT device found, attempting to connect...");
                 scanner.stopScan(this); // Stop the scan
 
-                bGatt = device.connectGatt(context, false, gattCallback);
+                device.connectGatt(context, false, gattCallback);
 
             } else {
                 Log.d(TAG, "Device found but not Nano 33 IoT, continuing scan...");
@@ -95,8 +114,16 @@ public class BluetoothCommunication {
                 if (service != null) {
                     Log.d(TAG, "service not null");
 
-                    characteristic = service.getCharacteristic(CHARACTERISTIC_UUID);
-                    sendMessage("1");
+                    BluetoothGattCharacteristic characteristic = service.getCharacteristic(CHARACTERISTIC_UUID);
+                    byte[] data = "1".getBytes(); // Convert your data to bytes
+                    characteristic.setValue(data);
+                    boolean success = gatt.writeCharacteristic(characteristic);
+
+                    if (success) {
+                        Log.d(TAG, "Writing characteristics successful");
+                    } else {
+                        Log.e(TAG, "Failed to write characteristics");
+                    }
                 } else {
                     Log.d(TAG, "Service is null");
 
@@ -107,23 +134,6 @@ public class BluetoothCommunication {
             }
         }
     };
-
-    private void sendMessage(String message) {
-        if(characteristic!=null&&bGatt!=null) {
-            byte[] data = message.getBytes(); // Convert your data to bytes
-            characteristic.setValue(data);
-            @SuppressLint("MissingPermission") boolean success = bGatt.writeCharacteristic(characteristic);
-
-            if (success) {
-                Log.d(TAG, "Writing characteristics successful");
-            } else {
-                Log.e(TAG, "Failed to write characteristics");
-            }
-        } else {
-            Log.e(TAG, "In sendMessage characteristic or bGatt was null");
-
-        }
-    }
 
     @SuppressLint("MissingPermission")
     public void startScan() {
