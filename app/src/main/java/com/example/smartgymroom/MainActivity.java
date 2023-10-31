@@ -12,12 +12,17 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
 
+    private ActivityDatabase db ;
+
     @SuppressLint({"MissingPermission"})
     @Override
     public void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
+        db = new ActivityDatabase(this);
 
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
         bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
@@ -54,6 +59,11 @@ public class MainActivity extends AppCompatActivity {
                 .replace(R.id.fragment_container, new CurrentSessionFragment())
                 .commit();
 
+    }
+
+
+    public ActivityDatabase getActivityDatabase() {
+        return db;
     }
 
 
