@@ -5,7 +5,9 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class ActivityDatabase extends SQLiteOpenHelper {
 
@@ -53,9 +55,27 @@ public class ActivityDatabase extends SQLiteOpenHelper {
         return result != -1;
     }
 
-    public Cursor getAllActivities() {
+    public Cursor getLimitedActivities(int limit) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Log.d("Get all activities", "start");
-        return db.rawQuery("SELECT * FROM " + TABLE_NAME, null);
+        String query = "SELECT * FROM " + TABLE_NAME + " ORDER BY " + "_id" + " DESC LIMIT " + limit;
+        return db.rawQuery(query, null);
     }
+
+    public Map<String, Integer> getSessionCounts() {
+        Map<String, Integer> counts = new HashMap<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        String query = "SELECT activity_type, COUNT(*) FROM activities WHERE date >= date('now','-30 days') GROUP BY activity_type";
+        Cursor cursor = db.rawQuery(query, null);
+
+        while (cursor.moveToNext()) {
+            String type = cursor.getString(0);
+            int count = cursor.getInt(1);
+            counts.put(type, count);
+        }
+
+        cursor.close();
+        return counts;
+    }
+
+
 }

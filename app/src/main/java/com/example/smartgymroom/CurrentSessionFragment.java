@@ -39,6 +39,8 @@ import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 
 import java.io.ObjectInputStream;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -47,6 +49,7 @@ import weka.classifiers.Classifier;
 
 public class CurrentSessionFragment extends Fragment {
 
+    private String activityType;
     private Activity activity;
 
     private Chronometer chronometer;
@@ -66,6 +69,8 @@ public class CurrentSessionFragment extends Fragment {
     private SensorReading sensors;
     DataQueueManager manager = new DataQueueManager();
     TextView predictionTextView;
+
+    private ActivityDatabase db;
 
     private Handler handler = new Handler();
     private Runnable runnableCode = new Runnable() {
@@ -102,9 +107,6 @@ public class CurrentSessionFragment extends Fragment {
 
         handler.post(runnableCode);
 
-        BluetoothCommunication bluetooth = new BluetoothCommunication(activity);
-        bluetooth.startScan();
-
         mediaManager = new MediaManager(activity);  // Pass the host activity as context
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         scanner = adapter.getBluetoothLeScanner();
@@ -121,29 +123,54 @@ public class CurrentSessionFragment extends Fragment {
             Log.e(TAG, "could not get scanner object");
         }
 
+        BluetoothCommunication bluetooth = new BluetoothCommunication(activity, "Room 1");
+        bluetooth.startScan();
+
+
+        @SuppressLint({"NewApi", "LocalSuppress"}) LocalDate today = LocalDate.now();
+        @SuppressLint({"NewApi", "LocalSuppress"}) DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        @SuppressLint({"NewApi", "LocalSuppress"}) String todaysDate = today.format(formatter);
+
+        db = new ActivityDatabase(activity);
+
+
         Button button = view.findViewById(R.id.button);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Button b = (Button) v;
                 if (!isButtonPressed) {
+
                     b.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.button_pressed, null));
                     b.setTextColor(Color.parseColor("#000000"));
                     b.setText("Stop");
+
                     sensors.initSensors(sensorManager);
+
                     startChronometer(activity.findViewById(R.id.chronometer));
                 } else {
+
+                    activityType = predictionTextView.getText().toString();
+
                     b.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.button_border, null));
                     b.setTextColor(Color.parseColor("#2fff65"));
                     b.setText("Start");
+
                     sensors.stopSensors(sensorManager);
+
                     pauseChronometer(activity.findViewById(R.id.chronometer));
+
+                    String timeString = chronometer.getText().toString();
+
+
+                    db.insertActivity(timeString,activityType,todaysDate);
                     new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                         @Override
                         public void run() {
                             resetChronometer(activity.findViewById(R.id.chronometer));
                         }
                     }, 3000);
+
 
                 }
                 isButtonPressed = !isButtonPressed;
@@ -266,4 +293,11 @@ public class CurrentSessionFragment extends Fragment {
         chronometer.setBase(SystemClock.elapsedRealtime());
         pauseOffset = 0;
     }
+
+
+
+
+
+
+
 }
