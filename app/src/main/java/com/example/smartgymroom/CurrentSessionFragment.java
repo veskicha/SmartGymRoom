@@ -123,8 +123,6 @@ public class CurrentSessionFragment extends Fragment {
             Log.e(TAG, "could not get scanner object");
         }
 
-        BluetoothCommunication bluetooth = new BluetoothCommunication(activity, "Room 1");
-        bluetooth.startScan();
 
 
         @SuppressLint({"NewApi", "LocalSuppress"}) LocalDate today = LocalDate.now();
