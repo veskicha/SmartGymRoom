@@ -40,7 +40,7 @@ public class HistoryFragment extends Fragment {
     }
 
     private void setupListView() {
-        Cursor cursor = db.getAllActivities();
+        Cursor cursor = db.getLimitedActivities(5);
         String[] fromColumns = {"duration", "activity_type", "date"};
         int[] toViews = {R.id.textViewDuration, R.id.textViewActivityType, R.id.textViewDate};
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(
@@ -53,4 +53,6 @@ public class HistoryFragment extends Fragment {
         );
         listView.setAdapter(adapter);
     }
+
+
 }

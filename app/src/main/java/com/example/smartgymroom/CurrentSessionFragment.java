@@ -40,6 +40,7 @@ import androidx.fragment.app.Fragment;
 
 import java.io.ObjectInputStream;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -125,13 +126,10 @@ public class CurrentSessionFragment extends Fragment {
         BluetoothCommunication bluetooth = new BluetoothCommunication(activity, "Room 1");
         bluetooth.startScan();
 
-        //date and database initialization
-        LocalDate today = null;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            today = LocalDate.now();
-        }
 
-        String todaysDate = today.toString();
+        @SuppressLint({"NewApi", "LocalSuppress"}) LocalDate today = LocalDate.now();
+        @SuppressLint({"NewApi", "LocalSuppress"}) DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        @SuppressLint({"NewApi", "LocalSuppress"}) String todaysDate = today.format(formatter);
 
         db = new ActivityDatabase(activity);
 
