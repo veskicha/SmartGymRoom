@@ -6,7 +6,6 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
-
 import android.graphics.Color;
 import android.hardware.SensorManager;
 import android.os.Bundle;
@@ -32,11 +31,19 @@ import com.example.smartgymroom.Location.Point;
 import java.io.ObjectInputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import weka.classifiers.Classifier;
 
 public class CurrentSessionFragment extends Fragment {
 
+    private List<String> predictionsList = new ArrayList<>();
+    private Handler predictionHandler = new Handler(Looper.getMainLooper());
+    private Runnable predictionRunnable;
     private String activityType;
     private Activity activity;
 
@@ -128,6 +135,7 @@ public class CurrentSessionFragment extends Fragment {
 
                     startChronometer(activity.findViewById(R.id.chronometer));
                     startMonitoring();
+                    collectPredictionsFor30Sec();
                 } else {
 
                     activityType = predictionTextView.getText().toString();
@@ -219,6 +227,64 @@ public class CurrentSessionFragment extends Fragment {
     public void resetChronometer(View v) {
         chronometer.setBase(SystemClock.elapsedRealtime());
         pauseOffset = 0;
+    }
+
+    public void collectPredictionsFor30Sec() {
+
+        predictionsList.clear();
+        predictionRunnable = new Runnable() {
+            @Override
+            public void run() {
+                String currentPrediction = predictionTextView.getText().toString();
+                predictionsList.add(currentPrediction);
+
+                predictionHandler.postDelayed(this, 1000);
+            }
+        };
+        // Start collecting predictions
+        predictionHandler.post(predictionRunnable);
+
+        predictionHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                // Stop collecting predictions
+                predictionHandler.removeCallbacks(predictionRunnable);
+
+                // Process the collected predictions
+                processPredictions();
+            }
+        }, 30000); // 30 seconds
+    }
+
+    private void processPredictions() {
+        // Determine the most frequent prediction
+        String mostFrequentPrediction = getMostFrequentPrediction(predictionsList);
+
+        // Play a song based on the most frequent prediction
+        playSongBasedOnPrediction(mostFrequentPrediction);
+    }
+    private String getMostFrequentPrediction(List<String> predictions) {
+
+        Map<String, Integer> frequencyMap = new HashMap<>();
+        for (String prediction : predictions) {
+            if (frequencyMap.containsKey(prediction)) {
+                frequencyMap.put(prediction, frequencyMap.get(prediction) + 1);
+            } else {
+                frequencyMap.put(prediction, 1);
+            }
+        }
+        return Collections.max(frequencyMap.entrySet(), Map.Entry.comparingByValue()).getKey();
+    }
+
+    private void playSongBasedOnPrediction(String prediction) {
+        Log.d("A song is started", "should be strength" + prediction);
+        if ("cardio".equalsIgnoreCase(prediction)) {
+            mediaManager.startSong(1);
+        } else if ("strength".equalsIgnoreCase(prediction)) {
+            mediaManager.startSong(2);
+        } else if ("stretching".equalsIgnoreCase(prediction)) {
+            mediaManager.startSong(3);
+        }
     }
 
 
