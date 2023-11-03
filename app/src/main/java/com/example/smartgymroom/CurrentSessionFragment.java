@@ -4,19 +4,6 @@ package com.example.smartgymroom;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
-import android.bluetooth.BluetoothGattService;
-import android.bluetooth.BluetoothProfile;
-import android.bluetooth.le.BluetoothLeScanner;
-import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanFilter;
-import android.bluetooth.le.ScanResult;
-import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -37,37 +24,50 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+
+import com.example.smartgymroom.Location.Point;
 
 import java.io.ObjectInputStream;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
 
 import weka.classifiers.Classifier;
 
 public class CurrentSessionFragment extends Fragment {
 
+    private List<String> predictionsList = new ArrayList<>();
+    private Handler predictionHandler = new Handler(Looper.getMainLooper());
+    private Runnable predictionRunnable;
+    private String activityType;
     private Activity activity;
 
     private Chronometer chronometer;
     private long pauseOffset;
     private boolean running;
     private boolean isButtonPressed = false;
-    private boolean init = false;
-    private MediaManager mediaManager;
-    private static final String TAG = "DebugLogs";
     private Weka wekaManager;
     private static final String modelName = "tests/test_model_with_high_sliding_window_size.model";
-    private BluetoothLeScanner scanner;
-    private final List<ScanFilter> filters = new ArrayList<>();
-    private final ScanSettings scanSettings = new ScanSettings.Builder()
-            .setScanMode(ScanSettings.SCAN_MODE_LOW_POWER)
-            .build();
+
     private SensorReading sensors;
     DataQueueManager manager = new DataQueueManager();
     TextView predictionTextView;
 
+    private ActivityDatabase db;
+
+    private BeaconHandler beaconHandler;
+    private BeaconViewModel viewModel;
+
+    private MediaManager mediaManager;
+    private Location location = new Location();
+
     private Handler handler = new Handler();
+
     private Runnable runnableCode = new Runnable() {
         @Override
         public void run() {
@@ -102,24 +102,23 @@ public class CurrentSessionFragment extends Fragment {
 
         handler.post(runnableCode);
 
-        BluetoothCommunication bluetooth = new BluetoothCommunication(activity, "Room 1");
-        bluetooth.startScan();
-
         mediaManager = new MediaManager(activity);  // Pass the host activity as context
-        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
-        scanner = adapter.getBluetoothLeScanner();
+        viewModel = new ViewModelProvider(this).get(BeaconViewModel.class);
+        beaconHandler = new BeaconHandler(requireContext(), viewModel,this);
+        beaconHandler.createBeacon();
 
         if (activity.checkSelfPermission(android.Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED ||
                 activity.checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{android.Manifest.permission.BLUETOOTH_CONNECT, android.Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_FINE_LOCATION}, 123);
         }
 
-        if (scanner != null && !init) {
-            scanner.startScan(filters, scanSettings, scanCallback);
-            Log.d(TAG, "scan started");
-        } else {
-            Log.e(TAG, "could not get scanner object");
-        }
+
+        @SuppressLint({"NewApi", "LocalSuppress"}) LocalDate today = LocalDate.now();
+        @SuppressLint({"NewApi", "LocalSuppress"}) DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        @SuppressLint({"NewApi", "LocalSuppress"}) String todaysDate = today.format(formatter);
+
+        db = new ActivityDatabase(activity);
+
 
         Button button = view.findViewById(R.id.button);
         button.setOnClickListener(new View.OnClickListener() {
@@ -127,23 +126,39 @@ public class CurrentSessionFragment extends Fragment {
             public void onClick(View v) {
                 Button b = (Button) v;
                 if (!isButtonPressed) {
+
                     b.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.button_pressed, null));
                     b.setTextColor(Color.parseColor("#000000"));
                     b.setText("Stop");
+
                     sensors.initSensors(sensorManager);
+
                     startChronometer(activity.findViewById(R.id.chronometer));
+                    startMonitoring();
+                    collectPredictionsFor30Sec();
                 } else {
+
+                    activityType = predictionTextView.getText().toString();
+
                     b.setBackground(ResourcesCompat.getDrawable(getResources(), R.drawable.button_border, null));
                     b.setTextColor(Color.parseColor("#2fff65"));
                     b.setText("Start");
+
                     sensors.stopSensors(sensorManager);
+
                     pauseChronometer(activity.findViewById(R.id.chronometer));
+
+                    String timeString = chronometer.getText().toString();
+
+
+                    db.insertActivity(timeString,activityType,todaysDate);
                     new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                         @Override
                         public void run() {
                             resetChronometer(activity.findViewById(R.id.chronometer));
                         }
                     }, 3000);
+
 
                 }
                 isButtonPressed = !isButtonPressed;
@@ -154,85 +169,32 @@ public class CurrentSessionFragment extends Fragment {
         chronometer.setFormat("%s");
     }
 
-    private final ScanCallback scanCallback = new ScanCallback() {
-        @SuppressLint("MissingPermission")
-        @Override
-        public void onScanResult(int callbackType, ScanResult result) {
-            BluetoothDevice device = result.getDevice();
-            if (init) {
-                scanner.stopScan(this);
-            }
-            @SuppressLint("MissingPermission") String deviceName = device.getName();
-            if ("ESP32".equals(deviceName)) {
-                Log.d(TAG, "ESP32 device found, attempting to connect...");
-                scanner.stopScan(this);
-                init = true;
+    private void startMonitoring() {
+        String tag = "monitoring";
+        Boolean currentState = viewModel.getIsBeaconSearchStarted();
+        Log.d(tag, currentState.toString());
 
-                // TODO: Add your connection logic here. You'll probably need a GATT callback.
-                device.connectGatt(requireActivity(), false, gattCallback);
+        beaconHandler.startBeaconMonitoring();
+        viewModel.setBeaconsState(!currentState);
+        viewModel.deleteBeacons();
+        Log.d(tag, Boolean.toString(viewModel.getIsBeaconSearchStarted()));
+    }
+    public void foundBeacons(){
+        String tag = "monitoring";
+        Log.d(tag, "found 3 beacons");
 
-            } else {
-                Log.d(TAG, "Device found but not ESP32, continuing scan...");
-            }
-        }
+        beaconHandler.stopBeaconMonitoring();
 
-        @SuppressLint("MissingPermission")
-        @Override
-        public void onScanFailed(int errorCode) {
-            super.onScanFailed(errorCode);
-            Log.e(TAG, "Scan failed with error: " + errorCode);
-            if (!init) {
-                scanner.startScan(filters, scanSettings, this);
-            }
-        }
+        Point point = location.getOurLocation(viewModel.getComparedBeaconsList());
 
+        Log.d(tag, point.toString()+ " is our location");
+        Room roomFinder = new Room();
+        int room = roomFinder.getRoom(point);
 
-    };
+        BluetoothCommunication bluetooth = new BluetoothCommunication(activity, 0);
+        bluetooth.startScan();
 
-    private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
-
-        @SuppressLint("MissingPermission")
-        @Override
-        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Log.i(TAG, "Connected to GATT server.");
-                Log.i(TAG, "Attempting to start service discovery:" + gatt.discoverServices());
-
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                Log.i(TAG, "Disconnected from GATT server.");
-            }
-        }
-
-        @SuppressLint("MissingPermission")
-        @Override
-        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                // TODO: Here you can loop through available services and characteristics
-                UUID SERVICE_UUID = UUID.fromString("2fe4da9b-57da-43a8-b8f9-8877344d7dc5");
-                UUID CHARACTERISTIC_UUID = UUID.fromString("541426fd-debd-471d-8e1c-a4a18a837028");
-                BluetoothGattService service = gatt.getService(SERVICE_UUID);
-                if (service != null) {
-                    BluetoothGattCharacteristic characteristic = service.getCharacteristic(CHARACTERISTIC_UUID);
-                    gatt.setCharacteristicNotification(characteristic, true);
-                    BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"));
-                    descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                    gatt.writeDescriptor(descriptor);
-                    if ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0) {
-                        gatt.readCharacteristic(characteristic);
-                        Log.d(TAG, "Reading characteristics..");
-                    }
-
-                }
-
-                // to find the ones you're interested in.
-                // For instance, you can call gatt.getServices() to retrieve a list of available services.
-
-            } else {
-                Log.w(TAG, "onServicesDiscovered received: " + status);
-            }
-        }
-
-    };
+    }
 
     private Classifier initializeWeka() {
         Classifier classifier = null;
@@ -266,4 +228,69 @@ public class CurrentSessionFragment extends Fragment {
         chronometer.setBase(SystemClock.elapsedRealtime());
         pauseOffset = 0;
     }
+
+    public void collectPredictionsFor30Sec() {
+
+        predictionsList.clear();
+        predictionRunnable = new Runnable() {
+            @Override
+            public void run() {
+                String currentPrediction = predictionTextView.getText().toString();
+                predictionsList.add(currentPrediction);
+
+                predictionHandler.postDelayed(this, 1000);
+            }
+        };
+        // Start collecting predictions
+        predictionHandler.post(predictionRunnable);
+
+        predictionHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                // Stop collecting predictions
+                predictionHandler.removeCallbacks(predictionRunnable);
+
+                // Process the collected predictions
+                processPredictions();
+            }
+        }, 30000); // 30 seconds
+    }
+
+    private void processPredictions() {
+        // Determine the most frequent prediction
+        String mostFrequentPrediction = getMostFrequentPrediction(predictionsList);
+
+        // Play a song based on the most frequent prediction
+        playSongBasedOnPrediction(mostFrequentPrediction);
+    }
+    private String getMostFrequentPrediction(List<String> predictions) {
+
+        Map<String, Integer> frequencyMap = new HashMap<>();
+        for (String prediction : predictions) {
+            if (frequencyMap.containsKey(prediction)) {
+                frequencyMap.put(prediction, frequencyMap.get(prediction) + 1);
+            } else {
+                frequencyMap.put(prediction, 1);
+            }
+        }
+        return Collections.max(frequencyMap.entrySet(), Map.Entry.comparingByValue()).getKey();
+    }
+
+    private void playSongBasedOnPrediction(String prediction) {
+        Log.d("A song is started", "should be strength" + prediction);
+        if ("cardio".equalsIgnoreCase(prediction)) {
+            mediaManager.startSong(1);
+        } else if ("strength".equalsIgnoreCase(prediction)) {
+            mediaManager.startSong(2);
+        } else if ("stretching".equalsIgnoreCase(prediction)) {
+            mediaManager.startSong(3);
+        }
+    }
+
+
+
+
+
+
+
 }

@@ -27,30 +27,22 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Current activity: "
-            android:textSize="40sp" />
+            android:textSize="35sp" />
 
         <TextView
             android:id="@+id/prediction_text_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text=""
-            android:textSize="40sp" />
+            android:textSize="35sp" />
 
     </LinearLayout>
-
-    <TextView
-        android:id="@+id/current_song"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Rihanna sings something cool"
-        android:layout_marginTop="50dp"
-        android:textSize="20sp" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
-        android:layout_marginTop="170dp">
+        android:layout_marginTop="230dp">
 
         <Button
             android:id="@+id/button"
