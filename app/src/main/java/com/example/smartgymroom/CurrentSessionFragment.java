@@ -75,6 +75,7 @@ public class CurrentSessionFragment extends Fragment {
             handler.postDelayed(this, 3000);
         }
     };
+    private BluetoothCommunication bluetooth;
 
     @Override
     public void onDestroy() {
@@ -191,7 +192,7 @@ public class CurrentSessionFragment extends Fragment {
         Room roomFinder = new Room();
         int room = roomFinder.getRoom(point);
 
-        BluetoothCommunication bluetooth = new BluetoothCommunication(activity, 0);
+        bluetooth = new BluetoothCommunication(activity, 0);
         bluetooth.startScan();
 
     }
@@ -279,11 +280,20 @@ public class CurrentSessionFragment extends Fragment {
     private void playSongBasedOnPrediction(String prediction) {
         Log.d("A song is started", "should be strength" + prediction);
         if ("cardio".equalsIgnoreCase(prediction)) {
-            mediaManager.startSong(1);
+            if(bluetooth !=null) {
+                mediaManager.startSong(1);
+                bluetooth.sendMessage(String.valueOf(1));
+            }
         } else if ("strength".equalsIgnoreCase(prediction)) {
-            mediaManager.startSong(2);
+            if(bluetooth !=null) {
+                mediaManager.startSong(2);
+                bluetooth.sendMessage(String.valueOf(2));
+            }
         } else if ("stretching".equalsIgnoreCase(prediction)) {
-            mediaManager.startSong(3);
+            if(bluetooth !=null) {
+                mediaManager.startSong(3);
+                bluetooth.sendMessage(String.valueOf(3));
+            }
         }
     }
 

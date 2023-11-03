@@ -114,7 +114,7 @@ public class BluetoothCommunication {
                     Log.d(TAG, "service not null");
 
                     characteristic = service.getCharacteristic(CHARACTERISTIC_UUID);
-                    sendMessage("2");
+                    sendMessage("-1");
                 } else {
                     Log.d(TAG, "Service is null");
 
@@ -126,7 +126,7 @@ public class BluetoothCommunication {
         }
     };
 
-    private void sendMessage(String message) {
+    public void sendMessage(String message) {
         if(characteristic!=null&&bGatt!=null) {
             byte[] data = message.getBytes(); // Convert your data to bytes
             characteristic.setValue(data);
