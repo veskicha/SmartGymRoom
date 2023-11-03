@@ -287,7 +287,7 @@ public class CurrentSessionFragment extends Fragment {
         if (bluetooth == null) {
             return;
         }
-
+        Log.d("song", prediction);
 
         if ("cardio".equalsIgnoreCase(prediction)) {
             mediaManager.startSong(1);

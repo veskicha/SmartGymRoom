@@ -20,6 +20,7 @@ public class MediaManager {
         if (currentSong == activity) {
             return;
         }
+        currentSong = activity;
 
         stopSong();
         int song = activity == 1 ? R.raw.cardio : activity == 2 ? R.raw.strength : R.raw.stretching;
@@ -29,8 +30,10 @@ public class MediaManager {
     }
 
     public void stopSong() {
-        mediaPlayer.stop();
-        mediaPlayer.release();
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+            mediaPlayer.release();
+        }
     }
 }
 
