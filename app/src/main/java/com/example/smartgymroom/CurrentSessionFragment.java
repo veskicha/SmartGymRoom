@@ -52,7 +52,7 @@ public class CurrentSessionFragment extends Fragment {
     private boolean running;
     private boolean isButtonPressed = false;
     private Weka wekaManager;
-    private static final String modelName = "tests/test_model_with_high_sliding_window_size.model";
+//    private static final String modelName = "lmt-all-data-combined.model";
 
     private SensorReading sensors;
     DataQueueManager manager = new DataQueueManager();
@@ -71,8 +71,10 @@ public class CurrentSessionFragment extends Fragment {
     private Runnable runnableCode = new Runnable() {
         @Override
         public void run() {
-            predictionTextView.setText(wekaManager.getActivity());
-            handler.postDelayed(this, 3000);
+            String prediction = wekaManager.getActivity();
+            predictionTextView.setText(prediction);
+            playSongBasedOnPrediction(prediction);
+            handler.postDelayed(this, 5000);
         }
     };
     private BluetoothCommunication bluetooth;
@@ -105,7 +107,7 @@ public class CurrentSessionFragment extends Fragment {
 
         mediaManager = new MediaManager(activity);  // Pass the host activity as context
         viewModel = new ViewModelProvider(this).get(BeaconViewModel.class);
-        beaconHandler = new BeaconHandler(requireContext(), viewModel,this);
+        beaconHandler = new BeaconHandler(requireContext(), viewModel, this);
         beaconHandler.createBeacon();
 
         if (activity.checkSelfPermission(android.Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED ||
@@ -136,6 +138,7 @@ public class CurrentSessionFragment extends Fragment {
 
                     startChronometer(activity.findViewById(R.id.chronometer));
                     startMonitoring();
+                    wekaManager.startClassifying();
                     collectPredictionsFor30Sec();
                 } else {
 
@@ -145,6 +148,7 @@ public class CurrentSessionFragment extends Fragment {
                     b.setTextColor(Color.parseColor("#2fff65"));
                     b.setText("Start");
 
+                    wekaManager.stopClassifying();
                     sensors.stopSensors(sensorManager);
 
                     pauseChronometer(activity.findViewById(R.id.chronometer));
@@ -152,7 +156,7 @@ public class CurrentSessionFragment extends Fragment {
                     String timeString = chronometer.getText().toString();
 
 
-                    db.insertActivity(timeString,activityType,todaysDate);
+                    db.insertActivity(timeString, activityType, todaysDate);
                     new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                         @Override
                         public void run() {
@@ -180,7 +184,8 @@ public class CurrentSessionFragment extends Fragment {
         viewModel.deleteBeacons();
         Log.d(tag, Boolean.toString(viewModel.getIsBeaconSearchStarted()));
     }
-    public void foundBeacons(){
+
+    public void foundBeacons() {
         String tag = "monitoring";
         Log.d(tag, "found 3 beacons");
 
@@ -188,7 +193,7 @@ public class CurrentSessionFragment extends Fragment {
 
         Point point = location.getOurLocation(viewModel.getComparedBeaconsList());
 
-        Log.d(tag, point.toString()+ " is our location");
+        Log.d(tag, point.toString() + " is our location");
         Room roomFinder = new Room();
         int room = roomFinder.getRoom(point);
 
@@ -197,17 +202,17 @@ public class CurrentSessionFragment extends Fragment {
 
     }
 
-    private Classifier initializeWeka() {
-        Classifier classifier = null;
-        try {
-            Activity activity = requireActivity();
-            ObjectInputStream objectInputStream = new ObjectInputStream(activity.getAssets().open(modelName));
-            classifier = (Classifier) objectInputStream.readObject();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return classifier;
-    }
+//    private Classifier initializeWeka() {
+//        Classifier classifier = null;
+//        try {
+//            Activity activity = requireActivity();
+//            ObjectInputStream objectInputStream = new ObjectInputStream(activity.getAssets().open(modelName));
+//            classifier = (Classifier) objectInputStream.readObject();
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        return classifier;
+//    }
 
     public void startChronometer(View v) {
         if (!running) {
@@ -264,6 +269,7 @@ public class CurrentSessionFragment extends Fragment {
         // Play a song based on the most frequent prediction
         playSongBasedOnPrediction(mostFrequentPrediction);
     }
+
     private String getMostFrequentPrediction(List<String> predictions) {
 
         Map<String, Integer> frequencyMap = new HashMap<>();
@@ -278,29 +284,26 @@ public class CurrentSessionFragment extends Fragment {
     }
 
     private void playSongBasedOnPrediction(String prediction) {
-        Log.d("A song is started", "should be strength" + prediction);
+        if (bluetooth == null) {
+            return;
+        }
+
+
         if ("cardio".equalsIgnoreCase(prediction)) {
-            if(bluetooth !=null) {
-                mediaManager.startSong(1);
-                bluetooth.sendMessage(String.valueOf(1));
-            }
-        } else if ("strength".equalsIgnoreCase(prediction)) {
-            if(bluetooth !=null) {
-                mediaManager.startSong(2);
-                bluetooth.sendMessage(String.valueOf(2));
-            }
-        } else if ("stretching".equalsIgnoreCase(prediction)) {
-            if(bluetooth !=null) {
-                mediaManager.startSong(3);
-                bluetooth.sendMessage(String.valueOf(3));
-            }
+            mediaManager.startSong(1);
+            bluetooth.sendMessage(String.valueOf(1));
+        }
+
+        if ("strength".equalsIgnoreCase(prediction)) {
+            mediaManager.startSong(2);
+            bluetooth.sendMessage(String.valueOf(2));
+        }
+
+        if ("stretching".equalsIgnoreCase(prediction)) {
+            mediaManager.startSong(3);
+            bluetooth.sendMessage(String.valueOf(3));
         }
     }
-
-
-
-
-
 
 
 }

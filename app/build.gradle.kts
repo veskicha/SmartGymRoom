@@ -37,6 +37,8 @@ android {
 }
 
 dependencies {
+
+    implementation("org.apache.commons:commons-math3:3.6.1")
     implementation("org.altbeacon:android-beacon-library:2+")
     implementation ("io.reactivex.rxjava2:rxandroid:2.0.1")
     implementation ("io.reactivex.rxjava2:rxjava:2.0.8")

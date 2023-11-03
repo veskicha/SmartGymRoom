@@ -10,7 +10,8 @@ public class SensorReading {
 
     private boolean sensorsState = false;
     private DataQueueManager manager;
-    private final int samplePeriod = 20000;
+    private static final int samplePeriod = 20000;
+    public static final double frequency = 1 / ((double) samplePeriod / 1000000);
 
     private SensorEventListener accelerometerListener;
     private SensorEventListener gyroscopeListener;
@@ -30,8 +31,6 @@ public class SensorReading {
 
             @Override
             public void onSensorChanged(SensorEvent event) {
-                Log.d("D", "accelerometer.");
-                Log.d("Dacc", event.values.toString());
                 manager.addSensorData(event.values, 3);
             }
         };
@@ -63,26 +62,6 @@ public class SensorReading {
 //        }
 //    }
 
-    private void gyroscope(SensorManager sensorManager) {
-        Sensor gyroscope = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        gyroscopeListener = new SensorEventListener() {
-            @Override
-            public void onAccuracyChanged(Sensor sensor, int accuracy) {
-                // TODO: Handle accuracy changes
-            }
-
-            @Override
-            public void onSensorChanged(SensorEvent event) {
-                Log.d("Dgyro", event.values.toString());
-                manager.addSensorData(event.values, 9);
-            }
-        };
-        if (gyroscope != null) {
-            sensorManager.registerListener(gyroscopeListener, gyroscope, samplePeriod);
-        } else {
-            Log.d("D", "No gyroscope detected.");
-        }
-    }
 
     private void magnometer(SensorManager sensorManager) {
         Sensor magnometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
@@ -94,7 +73,6 @@ public class SensorReading {
 
             @Override
             public void onSensorChanged(SensorEvent event) {
-                Log.d("Dmagno", event.values.toString());
                 manager.addSensorData(event.values, 6);
             }
         };
@@ -109,8 +87,6 @@ public class SensorReading {
         if (!sensorsState) {
             accelerometer(sensorManager);
             magnometer(sensorManager);
-            gyroscope(sensorManager);
-            // linearAcceleration(sensorManager);
             sensorsState = true;
         }
     }

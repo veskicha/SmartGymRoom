@@ -20,7 +20,7 @@ public class Weka {
 
     private static Classifier wekaModel;
     private static final ArrayList<String> activityLabels = new ArrayList<>(Arrays.asList("strength", "cardio", "stretching"));
-    private static final String modelName = "tests/simple_test.model";
+    private static final String modelName = "lmt-all-data-combined.model";
     private DataQueueManager manager;
     private ArrayList<String> recentClassifications;
 
@@ -28,16 +28,16 @@ public class Weka {
     private Runnable runnableCode = new Runnable() {
         @Override
         public void run() {
-            double[] averages = manager.getAverages();
+            double[] averages = manager.getData();
             try {
                 String prediction = classifyInstance(averages);
-                Log.d("recognition", prediction);
+                Log.d("ML", prediction);
                 recentClassifications.add(prediction);
 
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            handler.postDelayed(this, 500);
+            handler.postDelayed(this, (long) (DataQueueManager.INTERVAL_SECONDS * 0.5 * 1000));
         }
     };
 
@@ -45,7 +45,7 @@ public class Weka {
         wekaModel = initializeWeka(context);
         this.manager = manager;
         recentClassifications = new ArrayList<>();
-        handler.post(runnableCode);
+
     }
 
     public String getActivity() {
@@ -53,6 +53,15 @@ public class Weka {
         recentClassifications.clear();
         return mostFrequestActivity;
     }
+
+    public void startClassifying() {
+        handler.post(runnableCode);
+    }
+
+    public void stopClassifying() {
+        handler.removeCallbacks(runnableCode);
+    }
+
 
     private Classifier initializeWeka(Context context) {
         Classifier classifier = null;
@@ -78,7 +87,7 @@ public class Weka {
 
     private Instance createInstance(double[] inputData) {
         List<Attribute> attributes = new ArrayList<>();
-        String[] attributeNames = new String[]{"aX", "aY", "aZ", "mX", "mY", "mZ", "gX", "gY", "gZ"};
+        String[] attributeNames = new String[]{"aX", "aXstd", "aXiqr", "aY", "aYstd", "aYiqr", "aZ", "aZstd", "aZiqr", "mX", "mY", "mZ"};
         for (String attributeName : attributeNames) {
             attributes.add(new Attribute(attributeName));
         }

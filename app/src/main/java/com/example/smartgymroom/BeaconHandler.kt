@@ -77,18 +77,18 @@ class BeaconHandler(val context: Context, private val viewModel: BeaconViewModel
 
     private val beaconTransmitter: BeaconTransmitter = BeaconTransmitter(context, beaconParser)
     fun createBeacon() {
-        Log.d(TAG, "Creating beacon...")
-        val beacon = Beacon.Builder()
-            .setId1("5f6be5f9-39a8-4ec6-8d9d-2e1b8f79d92d")
-            .setId2("1")
-            .setId3("2")
-            .setManufacturer(0x0118)
-            .setTxPower(-59)
-            .setDataFields(listOf(0L))
-            .build()
-
-        beaconTransmitter.startAdvertising(beacon)
-        Log.d(TAG, "Beacon created, advertising presence now.")
+//        Log.d(TAG, "Creating beacon...")
+//        val beacon = Beacon.Builder()
+//            .setId1("5f6be5f9-39a8-4ec6-8d9d-2e1b8f79d92d")
+//            .setId2("1")
+//            .setId3("2")
+//            .setManufacturer(0x0118)
+//            .setTxPower(-59)
+//            .setDataFields(listOf(0L))
+//            .build()
+//
+//        beaconTransmitter.startAdvertising(beacon)
+//        Log.d(TAG, "Beacon created, advertising presence now.")
     }
 
 //    14e67c9b-28c3-4c38-a144-75b62cb7e968 //iris old one

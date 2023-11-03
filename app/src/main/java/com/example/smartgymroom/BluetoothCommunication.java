@@ -34,7 +34,7 @@ public class BluetoothCommunication {
     private boolean foundMusic = false;
 
 
-    String[][] roomDetails = {{"lights 0","JBL Go 3"} ,{"lights 1","idk"}};
+    String[][] roomDetails = {{"lights 0", "JBL Go 3"}, {"lights 1", "idk"}};
 
 
     private final ScanSettings scanSettings = new ScanSettings.Builder()
@@ -57,24 +57,21 @@ public class BluetoothCommunication {
 
             BluetoothDevice device = result.getDevice();
             @SuppressLint("MissingPermission") String deviceName = device.getName();
-            if (lightsName.equals(deviceName)&&!foundLights) {
+            if (lightsName.equals(deviceName)) {
                 Log.d(TAG, "Lights device found, attempting to connect...");
                 foundLights = true;
                 bGatt = device.connectGatt(context, false, gattCallback);
-
+                scanner.stopScan(this);
 //            } else
 //            if(musicName.equals(deviceName)&&!foundMusic){
 //                Log.d(TAG, "Music device found, attempting to connect...");
 //                foundMusic = true;
 //                bGatt = device.connectGatt(context, false, gattCallback);
 //
-            }else if(foundMusic&&foundLights){
-                scanner.stopScan(this);
-            }else if (deviceName!=null){
-                Log.d(TAG, deviceName+ " found, continuing scan...");
+            } else if (deviceName != null) {
+                Log.d(TAG, deviceName + " found, continuing scan...");
             }
         }
-
 
 
         @SuppressLint("MissingPermission")
@@ -86,7 +83,6 @@ public class BluetoothCommunication {
 
         }
     };
-
 
 
     private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
@@ -127,16 +123,15 @@ public class BluetoothCommunication {
     };
 
     public void sendMessage(String message) {
-        if(characteristic!=null&&bGatt!=null) {
+        if (characteristic != null && bGatt != null) {
             byte[] data = message.getBytes(); // Convert your data to bytes
             characteristic.setValue(data);
-            @SuppressLint("MissingPermission") boolean success = bGatt.writeCharacteristic(characteristic);
-
-            if (success) {
-                Log.d(TAG, "Writing characteristics successful");
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                @SuppressLint("MissingPermission") int success = bGatt.writeCharacteristic(characteristic, data, BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
             } else {
-                Log.e(TAG, "Failed to write characteristics");
+                @SuppressLint("MissingPermission") boolean success = bGatt.writeCharacteristic(characteristic);
             }
+
         } else {
             Log.e(TAG, "In sendMessage characteristic or bGatt was null");
 

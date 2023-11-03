@@ -7,31 +7,28 @@ public class MediaManager {
 
     public MediaManager(Context context) {
         this.context = context;
-        //mediaPlayer = MediaPlayer.create(context, R.raw.song);
+        currentSong = -1;
     }
 
 
     private Context context;
     private MediaPlayer mediaPlayer;
+    private int currentSong;
 
 
     public void startSong(int activity) {
-        if (activity == 1){
-            mediaPlayer = MediaPlayer.create(context, R.raw.cardio) ;
-        }else if(activity == 2){
-            mediaPlayer = MediaPlayer.create(context, R.raw.strength) ;
-        }else if (activity == 3 ){
-            mediaPlayer = MediaPlayer.create(context, R.raw.stretching) ;
-        }else{
-            mediaPlayer = MediaPlayer.create(context, R.raw.song1) ;
+        if (currentSong == activity) {
+            return;
         }
 
+        stopSong();
+        int song = activity == 1 ? R.raw.cardio : activity == 2 ? R.raw.strength : R.raw.stretching;
+        mediaPlayer = MediaPlayer.create(context, song);
 
         mediaPlayer.start();
     }
 
     public void stopSong() {
-        //mediaPlayer.pause();
         mediaPlayer.stop();
         mediaPlayer.release();
     }
