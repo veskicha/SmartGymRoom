@@ -197,7 +197,7 @@ public class CurrentSessionFragment extends Fragment {
         Room roomFinder = new Room();
         int room = roomFinder.getRoom(point);
 
-        bluetooth = new BluetoothCommunication(activity, 0);
+        bluetooth = new BluetoothCommunication(activity, room);
         bluetooth.startScan();
 
     }
