@@ -191,11 +191,11 @@ public class CurrentSessionFragment extends Fragment {
 
         beaconHandler.stopBeaconMonitoring();
 
-        Point point = location.getOurLocation(viewModel.getComparedBeaconsList());
+//        Point point = location.getOurLocation(viewModel.getComparedBeaconsList());
 
-        Log.d(tag, point.toString() + " is our location");
-        Room roomFinder = new Room();
-        int room = roomFinder.getRoom(point);
+//        Log.d(tag, point.toString() + " is our location");
+//        Room roomFinder = new Room();
+//        int room = roomFinder.getRoom(point);
 
         bluetooth = new BluetoothCommunication(activity, room);
         bluetooth.startScan();

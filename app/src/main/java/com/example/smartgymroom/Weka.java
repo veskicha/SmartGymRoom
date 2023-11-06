@@ -20,7 +20,7 @@ public class Weka {
 
     private static Classifier wekaModel;
     private static final ArrayList<String> activityLabels = new ArrayList<>(Arrays.asList("strength", "cardio", "stretching"));
-    private static final String modelName = "lmt-all-data-combined.model";
+    private static final String modelName = "rf-all-data-combined.model";
     private DataQueueManager manager;
     private ArrayList<String> recentClassifications;
 
