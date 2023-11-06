@@ -33,6 +33,8 @@ public class BluetoothCommunication {
     private boolean foundLights = false;
     private boolean foundMusic = false;
 
+    String lightsName;
+
 
     String[][] roomDetails = {{"lights 0", "JBL Go 3"}, {"lights 1", "idk"}};
 
@@ -44,6 +46,7 @@ public class BluetoothCommunication {
     BluetoothCommunication(Context context, int roomNumber) {
         this.context = context;
         this.roomNumber = roomNumber;
+        lightsName = roomDetails[roomNumber][0];
 
     }
 
@@ -52,16 +55,13 @@ public class BluetoothCommunication {
         @SuppressLint("MissingPermission")
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
-            String lightsName = roomDetails[roomNumber][0];
-            String musicName = roomDetails[roomNumber][1];
-
             BluetoothDevice device = result.getDevice();
             @SuppressLint("MissingPermission") String deviceName = device.getName();
             if (lightsName.equals(deviceName)) {
+                scanner.stopScan(this);
                 Log.d(TAG, "Lights device found, attempting to connect...");
                 foundLights = true;
                 bGatt = device.connectGatt(context, false, gattCallback);
-                scanner.stopScan(this);
 //            } else
 //            if(musicName.equals(deviceName)&&!foundMusic){
 //                Log.d(TAG, "Music device found, attempting to connect...");

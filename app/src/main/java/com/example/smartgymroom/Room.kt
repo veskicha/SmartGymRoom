@@ -7,26 +7,26 @@ class Room () {
     data class Vector(val lon: Double, val lat: Double)
 
     //TODO: updates point to coordinates of corners of room (clockwise)
+    val roomCorners0 = listOf(
+        Point(6.8553735,52.2394911),
+        Point(6.8552203,52.2394963),
+        Point(6.8552237, 52.2395702),
+        Point(6.8553859, 52.2395593)
+    )
     val roomCorners1 = listOf(
-        Point(6.8516624, 52.2434713),
-        Point(6.8516949, 52.2435097),
-        Point(6.8517593, 52.2434828),
-        Point(6.8517284, 52.2434469)
+        Point(6.8553390,52.2392620),
+        Point(6.8552786,52.2392675),
+        Point(6.8552843, 52.2393123),
+        Point(6.8553413,52.2393103)
     )
     val roomCorners2 = listOf(
-        Point(6.8516540, 52.2434651),
-        Point(6.8517157, 52.2434397),
-        Point(6.8516848, 52.2434089),
-        Point(6.8516198, 52.243402)
-    )
-    val roomCorners3 = listOf(
         Point(1.0, 1.0),
         Point(4.0, 1.0),
         Point(4.0, 3.0),
         Point(1.0, 3.0)
     )
 
-    val rooms = listOf(roomCorners1, roomCorners2)
+    val rooms = listOf(roomCorners0, roomCorners1)
 
     fun isPointInsideRoom(roomCorners: List<Point>, point: Point): Boolean {
         if (roomCorners.size != 4) {
@@ -57,7 +57,7 @@ class Room () {
 
     fun getRoom(location : Location.Point): Int {
         var position = Point(location.y, location.x)
-        var n = 1
+        var n = 0
         rooms.forEach { room ->
             if (isPointInsideRoom(
                     room,
@@ -67,10 +67,12 @@ class Room () {
                 Log.d("Found room", n.toString())
                 return n
             } else {
-                n = n + 1
+                n = n+1
             }
         }
-        return -1
+        Log.d("Found no room", n.toString())
+
+        return 0
     }
 
     //getRoom(

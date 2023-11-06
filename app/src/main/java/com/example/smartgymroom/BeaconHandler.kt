@@ -64,7 +64,7 @@ class BeaconHandler(val context: Context, private val viewModel: BeaconViewModel
             viewModel.updateRangedBeacons(beacons)
         }
         Log.d(TAG, "Seen: ${viewModel.allSeenBeacons.count()} beacons")
-        if (viewModel.allSeenBeacons.count()==3){
+        if (viewModel.allSeenBeacons.count()>=3){
             fragment.foundBeacons()
         }
 
