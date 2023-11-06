@@ -189,16 +189,18 @@ public class CurrentSessionFragment extends Fragment {
         String tag = "monitoring";
         Log.d(tag, "found 3 beacons");
 
-        beaconHandler.stopBeaconMonitoring();
+//        beaconHandler.stopBeaconMonitoring();
 
-//        Point point = location.getOurLocation(viewModel.getComparedBeaconsList());
+        Point point = location.getOurLocation(viewModel.getComparedBeaconsList());
 
-//        Log.d(tag, point.toString() + " is our location");
-//        Room roomFinder = new Room();
-//        int room = roomFinder.getRoom(point);
+        Log.d(tag, point.toString() + " is our location");
+        Room roomFinder = new Room();
+        int room = roomFinder.getRoom(point);
 
-        bluetooth = new BluetoothCommunication(activity, 0);
-        bluetooth.startScan();
+        if(bluetooth==null) {
+            bluetooth = new BluetoothCommunication(activity, 0);
+            bluetooth.startScan();
+        }
 
     }
 

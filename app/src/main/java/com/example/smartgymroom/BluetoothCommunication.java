@@ -58,10 +58,11 @@ public class BluetoothCommunication {
             BluetoothDevice device = result.getDevice();
             @SuppressLint("MissingPermission") String deviceName = device.getName();
             if (lightsName.equals(deviceName)) {
-                scanner.stopScan(this);
                 Log.d(TAG, "Lights device found, attempting to connect...");
                 foundLights = true;
                 bGatt = device.connectGatt(context, false, gattCallback);
+                scanner.stopScan(this);
+
 //            } else
 //            if(musicName.equals(deviceName)&&!foundMusic){
 //                Log.d(TAG, "Music device found, attempting to connect...");
@@ -124,6 +125,10 @@ public class BluetoothCommunication {
 
     public void sendMessage(String message) {
         if (characteristic != null && bGatt != null) {
+            if (bGatt == null){
+                Log.e(TAG, "In sendMessage bGatt was null");
+
+            }
             byte[] data = message.getBytes(); // Convert your data to bytes
             characteristic.setValue(data);
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
